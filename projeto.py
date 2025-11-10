@@ -334,12 +334,14 @@ def draw_car(car_color=(0.596,0.729,0.835), car_size=(5.5, 2.5, 4.0)):
     glPopMatrix()
 
 def update_car():
-    global car_speed, steering_angle, wheel_angle, car_x, car_z, car_direction
+    global car_speed, steering_angle, wheel_angle, car_x, car_z, car_direction, steering_wheel_angle
 
     # menor
     if abs(car_speed) < 0.001:
        return
 
+    steering_wheel_angle += (steering_angle * 3.0 - steering_wheel_angle) * 0.1
+    
     wheel_radius = 0.7
     wheel_angle += (car_speed / (2 * 3.1415 * wheel_radius)) * 360.0
 
@@ -481,10 +483,14 @@ def keyboard(key, x, y):
         steering_angle += STEERING_SPEED
         if steering_angle > MAX_STEERING:
             steering_angle = MAX_STEERING
+
+        steering_wheel_angle = steering_angle * 3.0
     elif key == b'l':
         steering_angle -= STEERING_SPEED
         if steering_angle < -MAX_STEERING:
             steering_angle = -MAX_STEERING
+
+        steering_wheel_angle = steering_angle * 3.0
 
     elif key in (b'\x1b', b'q'):  # ESC or q
         try:
