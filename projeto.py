@@ -14,7 +14,11 @@ tex_floor = None
 sun_angle = 45.0     
 sun_distance = 100.0   
 sun_color = (1.0, 0.95, 0.8, 1.0)
-
+# -------------------------------------------------------------------------------------------------------------------------- #
+# camera dentro carro
+CameraDeCarro = False
+antigoeye = (0.0,5.0,14.0)
+antigoleye = (0.0,5.0,0.0)
 # -------------------------------------------------------------------------------------------------------------------------- #
 # carro
 car_speed = 0.0
@@ -359,7 +363,7 @@ def draw_car(car_color=(0.596,0.729,0.835), car_size=(5.5, 2.5, 4.0)):
 
 def update_car():
     global car_speed, steering_angle, wheel_angle, car_x, car_z, car_direction, steering_wheel_angle
-
+    global CameraDeCarro
     # menor
     if abs(car_speed) < 0.001:
        return
@@ -377,6 +381,16 @@ def update_car():
     car_x -= car_speed * cos(-car_direction_rad - steering_rad)
     car_z -= car_speed * sin(-car_direction_rad - steering_rad)
     car_speed *= 0.95
+    if CameraDeCarro:
+        global eye_x,eye_y,eye_z, leye_x, leye_y, leye_z
+        eye_x = car_x
+        eye_y = car_y + 3
+        eye_z = car_z
+        leye_x = car_x - car_speed * cos(-car_direction_rad - steering_rad)
+        leye_y = eye_y
+        leye_z = car_z - car_speed * sin(-car_direction_rad - steering_rad)
+
+
 
 def draw_porta_garagem(x,y,z,comprimento = 7.5, altura = 5,faixas = 10):
     global ABRIR,ANGLE_GARAGE, last_t
@@ -473,10 +487,10 @@ def keyboard(key, x, y):
     global leye_x,leye_y,leye_z
     global ABRIR
     global left_door_open, right_door_open, steering_wheel_angle, car_speed, car_direction, steering_angle
+    global CameraDeCarro,antigoeye,antigoleye
     
     step = 0.2
     step_angle = 0.1
-    cube_spet = 1
     if key == b'a': 
         r = sqrt(eye_x ** 2 + eye_z ** 2)
         tetha = atan2(eye_z, eye_x) + step_angle
@@ -499,7 +513,6 @@ def keyboard(key, x, y):
         eye_z -= 3
     elif key == b'o':
         eye_z += 3
-    
     # portas carroww
     elif key == b'h':  # direita porta
         right_door_open = not right_door_open
@@ -522,6 +535,15 @@ def keyboard(key, x, y):
             steering_angle = -MAX_STEERING
 
         steering_wheel_angle = steering_angle * 3.0
+    elif key == b'u':
+        CameraDeCarro = not CameraDeCarro
+        if CameraDeCarro:
+            antigoeye = (eye_x,eye_y,eye_z)
+            antigoleye = (leye_x,leye_y,leye_z)            
+        else:
+            eye_x,eye_y,eye_z = antigoeye
+            leye_x,leye_y,leye_z = antigoleye
+        
 
     elif key in (b'\x1b', b'q'):  # ESC or q
         try:
