@@ -110,7 +110,7 @@ def draw_cylinder(centro = (0,0,0), color = (0.85, 0.65, 0.35), base = 1.0,top =
     gluCylinder(quadric, base, top, height, 48, 32)
     glPopMatrix()
 
-def draw_poste_iluminacao(pos = (0,0,0),height = 5):
+#def draw_poste_iluminacao(pos = (0,0,0),height = 5):
     
 
 def draw_wall_garagem(x,y,z,angle_rotation = 0, qntVigas=10,comprimento=10,altura=7, largura =0.2, comprimento_viga = 0.1, cor_viga =(0.7,0.7,0.7)):
