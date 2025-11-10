@@ -9,6 +9,13 @@ from math import *
 win_w, win_h = 900, 600
 tex_floor = None
 
+# -------------------------------------------------------------------------------------------------------------------------- #
+# Sol
+sun_angle = 45.0     
+sun_distance = 100.0   
+sun_color = (1.0, 0.95, 0.8, 1.0)
+
+# -------------------------------------------------------------------------------------------------------------------------- #
 # carro
 car_speed = 0.0
 car_direction = 0.0
@@ -25,7 +32,7 @@ steering_wheel_angle = 0.0
 steering_angle = 0.0  
 MAX_STEERING = 30.0   
 STEERING_SPEED = 5.0   
-
+# -------------------------------------------------------------------------------------------------------------------------- #
 # garagem
 ANGLE_GARAGE = 0
 SIZE = 5
@@ -65,16 +72,13 @@ def load_texture(path, repeat=True):
 def setup():
     global tex_floor
     glEnable(GL_DEPTH_TEST)
-
+    
+    # sol
     glEnable(GL_LIGHTING)
     glEnable(GL_LIGHT0)
 
-    # Luz simples <- componentes RGB iguais - luz branca (cinzenta) - Não altera cor dos objectos
-    glLightfv(GL_LIGHT0, GL_POSITION, (0.0, 10.0, 5.0, 1.0))  #Posição <- Alta e para tras da câmara
-    glLightfv(GL_LIGHT0, GL_DIFFUSE,  (1.0, 1.0, 1.0, 1.0))   # Luz difusa
-    glLightfv(GL_LIGHT0, GL_AMBIENT,  (0.5, 0.5, 0.5, 1.0))   # Luz ambiente
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, [0.2, 0.2, 0.2, 1.0])  # ambient light
 
-    # Vamos permitir que as texturas sejam ilumnadas por multiplicação com a luz
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
     glEnable(GL_TEXTURE_2D)
 
@@ -84,10 +88,42 @@ def setup():
     glShadeModel(GL_FLAT)
     glClearColor(0.75, 0.75, 1.0, 1.0)
 
+    tex_floor = load_texture(GRUNGE_PATH, repeat=True)
+
+def draw_sun(angle_deg, distance=100.0, radius=3.0, color=(1.0,0.95,0.8,1.0)):
+    ang = radians(angle_deg)
+    sx = distance * cos(ang)
+    sy = distance * sin(ang)
+    sz = 0.0
+
+    glPushMatrix()
+    glTranslatef(sx, sy, sz)
+
+    # Make it appear glowing
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, [color[0], color[1], color[2], color[3]])
+    glColor3f(*color[:3])
+    glutSolidSphere(radius, 32, 32)
     
-    # Carregar as texturas 
+    # Reset emission to zero so other objects are not affected
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, [0.0,0.0,0.0,1.0])
     
-    tex_floor = load_texture(GRUNGE_PATH, repeat=True)    # grunge no floor Atenção ao repeat!!
+    glPopMatrix()
+
+def update_sun():
+    global sun_angle, sun_distance, sun_color
+    
+    ang = radians(sun_angle)
+    sun_x = sun_distance * cos(ang)
+    sun_y = sun_distance * sin(ang)
+    sun_z = 0.0
+
+    sun_position = [sun_x, sun_y, sun_z, 1.0]
+    sun_diffuse = [sun_color[0], sun_color[1], sun_color[2], 1.0]
+    sun_specular = [sun_color[0], sun_color[1], sun_color[2], 1.0]
+
+    glLightfv(GL_LIGHT0, GL_POSITION, sun_position)
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, sun_diffuse)
+    glLightfv(GL_LIGHT0, GL_SPECULAR, sun_specular)
 
 def draw_floor():
     S = 100.0                 
@@ -239,16 +275,6 @@ def draw_car(car_color=(0.596,0.729,0.835), car_size=(5.5, 2.5, 4.0)):
     height = car_size[1]
     width = car_size[2]
 
-    # car_direction_rad = radians(car_direction)
-
-    # car_x -= car_speed * cos(-car_direction_rad)
-    # car_z -= car_speed * sin(-car_direction_rad)
-
-    # wheel_radius = 0.7
-    # wheel_angle += (car_speed / (2 * 3.1415 * wheel_radius)) * 360.0
-
-    # car_speed *= 0.95
-
     glPushMatrix()
     glColor3f(*car_color)
     glTranslatef(car_x, car_y + lift, car_z)
@@ -316,9 +342,7 @@ def draw_car(car_color=(0.596,0.729,0.835), car_size=(5.5, 2.5, 4.0)):
 
     draw_steering_wheel(pos=( -length / 4.0 - 1, height / 2.0, 0.0))
 
-
     # frente e tras do carro
-
     for car_end in [-1,1]:
         glPushMatrix()
         glColor3f(*car_color)
@@ -410,16 +434,23 @@ def draw_porta_garagem(x,y,z,comprimento = 7.5, altura = 5,faixas = 10):
 def display():
     global eye_x,eye_y,eye_z
     global leye_x,leye_y,leye_z
+    global sun_angle, sun_color, sun_distance
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
-    gluLookAt(eye_x, eye_y, eye_z,   # eye
-              leye_x, leye_y, leye_z,   # center
-              0.0, 1.0, 0.0)   # up
+    gluLookAt(eye_x, eye_y, eye_z,
+              leye_x, leye_y, leye_z,
+              0.0, 1.0, 0.0) 
 
-    # recolocar a posição da luz a cada frame
     glLightfv(GL_LIGHT0, GL_POSITION, (0.0, 10.0, 5.0, 1.0))
+
+    update_sun()
+    draw_sun(sun_angle, distance=sun_distance, radius=3.0, color=sun_color)
+    sun_angle += 0.1
+    if sun_angle >= 360.0:
+        sun_angle -= 360.0
 
     draw_floor()
     draw_porta_garagem(0,0,0)
