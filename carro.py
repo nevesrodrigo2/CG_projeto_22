@@ -18,10 +18,10 @@ class Car:
     # carro state
     car_speed = 0.0
     acceleration = 0.2
-    car_direction = 0.0
-    car_x = 5
+    car_direction = 90.0
+    car_x = 0.0
     car_y = 1.0
-    car_z = 10.0
+    car_z = -20.0
     left_door_angle = 0.0
     right_door_angle = 0.0
     left_door_open = False

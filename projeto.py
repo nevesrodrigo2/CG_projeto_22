@@ -11,9 +11,11 @@ from carro import Car
 
 win_w, win_h = 900, 600
 tex_floor = None
+quadric = None
 
+#------------------------------------------ #
+# Carro
 my_car = Car()
-
 # -------------------------------------------------------------------------------------------------------------------------- #
 # Sol
 sun_angle = 45.0     
@@ -28,7 +30,7 @@ SIZE = 5
 START_TIME = 0
 
 GRUNGE_PATH = "Texturelabs_Grunge_197M.jpg"
-
+GRASS_PATH = "relva.png"
 ABRIR = False
 
 def load_texture(path, repeat=True):
@@ -69,7 +71,7 @@ def setup():
     glShadeModel(GL_FLAT)
     glClearColor(0.75, 0.75, 1.0, 1.0)
 
-    tex_floor = load_texture(GRUNGE_PATH, repeat=True)
+    tex_floor = load_texture(GRASS_PATH, repeat=True)
 
 def draw_sun(angle_deg, distance=100.0, radius=3.0, color=(1.0,0.95,0.8,1.0)):
     ang = radians(angle_deg)
@@ -96,9 +98,10 @@ def update_sun():
     sun_y = sun_distance * sin(ang)
     sun_z = 0.0
 
+    intensity = 2
     sun_position = [sun_x, sun_y, sun_z, 1.0]
-    sun_diffuse = [sun_color[0], sun_color[1], sun_color[2], 1.0]
-    sun_specular = [sun_color[0], sun_color[1], sun_color[2], 1.0]
+    sun_diffuse = [sun_color[0] * intensity, sun_color[1] * intensity, sun_color[2] * intensity , 1.0]
+    sun_specular = [sun_color[0] * intensity, sun_color[1] * intensity, sun_color[2] * intensity, 1.0]
 
     glLightfv(GL_LIGHT0, GL_POSITION, sun_position)
     glLightfv(GL_LIGHT0, GL_DIFFUSE, sun_diffuse)
@@ -118,34 +121,110 @@ def draw_floor():
     glTexCoord2f(0.0,  T ); glVertex3f(-S, 0.0, -S)
     glEnd()
 
-def draw_wall_garagem(x,y,z,qntVigas=10,comprimento=10,altura=7, largura =2, comprimento_viga = 0.5, cor_viga =3):
+def draw_sphere(centro = (0,0,0),color = (0.85, 0.65, 0.35), raio = 1):
+    glPushMatrix()
+    glTranslatef(*centro)
+    glColor3f(*color)
+    #glRotatef(90, 1, 0, 0)      # rodar 90° em X
+    gluSphere(quadric, raio, 48, 32)
+    glPopMatrix()
+
+def draw_circle(raio, centro = (0,0,0)):
+    glPushMatrix()
+    glTranslatef(*centro)
+    gluDisk(quadric,0.0,raio,50,1)
+    glPopMatrix()
+    
+def draw_cylinder(centro = (0,0,0), color = (0.85, 0.65, 0.35), base = 1.0,top = 1.0,height = 3):
+    glPushMatrix()
+    glColor3f(*color)
+    glTranslatef(*centro)
+    draw_circle(base)
+    draw_circle(top,(0,0,+height))
+    gluCylinder(quadric, base, top, height, 48, 32)
+    glPopMatrix()
+
+#def draw_poste_iluminacao(pos = (0,0,0),height = 5):
+    
+
+def draw_wall_garagem(x,y,z,angle_rotation = 0, qntVigas=10,comprimento=10,altura=7, largura =0.2, comprimento_viga = 0.1, cor_viga =(0.7,0.7,0.7)):
     glPushMatrix()
     glNormal3f(0.0, 1.0, 0.0) 
-    glTranslate(x,y,z)
-    glColor3f(0.3,0.3,0.3)
+    glTranslatef(x,y,z) 
+    #desenha a parede
+    glColor3f(0.2,0.2,0.2) # quase preeto
+    glRotatef(angle_rotation,0,1,0)
     glBegin(GL_QUADS)
+    glVertex2f(-comprimento/2,0)
+    glVertex2f(comprimento/2,0)
+    glVertex2f(comprimento/2,altura)
+    glVertex2f(-comprimento/2,altura)
+    glEnd()
+    glPopMatrix()
+
+    glPushMatrix()
+    glColor3f(*cor_viga)
+    #glTranslatef(0,0,largura) #ficar ao lado da parede
+    comprimento_relacao = comprimento_viga/altura
+    dist_vigas = comprimento / (qntVigas) #começar e acabar com uma viga
+    largura_relacao = largura/altura 
+    glTranslatef(x,y+ altura/2,z)
+    glRotatef(angle_rotation,0,1,0)
+    glTranslatef(-dist_vigas * (qntVigas//2),0,comprimento_viga/2)
+    glScalef(largura_relacao,1,comprimento_relacao)
+    for i in range(qntVigas):
+        glPushMatrix()  
+        glTranslatef(i * dist_vigas / largura_relacao, 0,0)
+        glNormal3f(0.0, 1.0, 0.0) 
+        glRotatef(90,0,1,0)
+        glutSolidCube(altura)
+        glPopMatrix()
+
+    glPopMatrix()
+
+def draw_teto_garagem(x,y,z,comprimento = 7.5, largura = 10):
+    glPushMatrix()
+    glTranslatef(x,y,z)
+    glRotatef(90,1,0,0)
+    draw_wall_garagem(0,0,0,comprimento = comprimento,altura=largura,comprimento_viga=-0.1)
     glPopMatrix()
 
 def draw_porta_garagem(x,y,z,comprimento = 7.5, altura = 5,faixas = 10):
-    global ABRIR,ANGLE_GARAGE, last_t
+    global ABRIR,ANGLE_GARAGE, last_time_garage
     glPushMatrix()
     glNormal3f(0.0, 1.0, 0.0) 
-    glTranslate(x,y,z)
+    glTranslatef(x,y,z) #posição dada
+    #glTranslatef(0.0, altura/2, 0.0)  # posiciona acima do chão
 
+    #começa abrir e fechar
+    #--------------------------------------//------------------------------------------
+    #mecanismo de abrir e fechar a porta
     if ABRIR and ANGLE_GARAGE <90:
+        # gira em torno do eixo superior
         t = glfw.get_time()
-        ANGLE_GARAGE += 30.0 * max(0.0, t - last_t)
-        last_t = t
+        ANGLE_GARAGE += 30.0 * max(0.0, t - last_time_garage)
+        last_time_garage = t
     elif not ABRIR and ANGLE_GARAGE > 0:
         t = glfw.get_time()
-        ANGLE_GARAGE -= 30.0 * max(0.0, t - last_t)
-        last_t = t 
-    ANGLE_GARAGE = max(0.0, min(ANGLE_GARAGE, 90))
-
-    glTranslatef(0.0, altura, 0.0)
-    glRotatef(ANGLE_GARAGE, 1, 0, 0)
+        ANGLE_GARAGE -= 30.0 * max(0.0, t - last_time_garage)
+        last_time_garage = t 
+    if ANGLE_GARAGE > 90: #teste de erros caso a garagem vá muito para cima ou para baixo
+        ANGLE_GARAGE = 90
+    elif ANGLE_GARAGE < 0:
+        ANGLE_GARAGE = 0
+    glTranslatef(0.0, altura, 0.0) # faz com que as tranformações ocorram no eixo superior
+    glRotatef(ANGLE_GARAGE, 1, 0, 0)  
     glTranslatef(0.0, -altura, 0.0)
+    #acabar o mecanismo de fechar a porta
+    #------------------------------------------//----------------------------------------
 
+    #Desenhar o retangulo da garagem
+    #glScalef(0.03,1,1.3)
+    #glutSolidCube(size)
+    #defenir pontos
+    #--------------------------------------//--------------------------------------------
+    #parte da frente do portão
+    #desenha a figura primeiro no centro
     altura_per_faixa = altura / faixas
     y_atual = 0
     for i in range(faixas):
@@ -159,8 +238,20 @@ def draw_porta_garagem(x,y,z,comprimento = 7.5, altura = 5,faixas = 10):
         glEnd()
         y_atual += altura_per_faixa
 
-    glColor3f(0.7, 0.8, 0.7)
+    glColor3f(0.7, 0.8, 0.7)#usa uma cor escura para para o portão
     glPopMatrix()
+
+def draw_garagem(x,y,z):
+    comprimento_porta = 7.5
+    altura_porta = 5
+    comprimento_parede = 10
+    altura_parede = 7
+    draw_porta_garagem(x,y,z,comprimento=7.5,altura=5,faixas=10)
+    draw_wall_garagem(x+comprimento_porta/2,y,z+altura_porta, angle_rotation=90,qntVigas=11,comprimento_viga=0.10)
+    draw_wall_garagem(x+-comprimento_porta/2,y,z+altura_porta, angle_rotation=90,qntVigas=11, comprimento_viga=-0.1)
+    draw_wall_garagem(x,y+altura_porta,z,angle_rotation= 0,comprimento=7.5,altura = 2,comprimento_viga=-0.1)
+    draw_wall_garagem(x,y,z+comprimento_parede,angle_rotation= 0,comprimento=7.5,comprimento_viga=0.1)
+    draw_teto_garagem(x,y+altura_parede,z)
 
 
 def display():
@@ -174,16 +265,18 @@ def display():
               var_globals.leye_x, var_globals.leye_y, var_globals.leye_z,
               0.0, 1.0, 0.0) 
 
-    glLightfv(GL_LIGHT0, GL_POSITION, (0.0, 10.0, 5.0, 1.0))
-
     update_sun()
+
+    glEnable(GL_TEXTURE_2D)
+    draw_floor()
+
+    glDisable(GL_TEXTURE_2D)
     draw_sun(sun_angle, distance=sun_distance, radius=3.0, color=sun_color)
     sun_angle += 0.1
     if sun_angle >= 360.0:
         sun_angle -= 360.0
 
-    draw_floor()
-    draw_porta_garagem(0,0,0)
+    draw_garagem(0,0,0)
     my_car.update_car()
     my_car.draw_car()
 
@@ -219,8 +312,8 @@ def keyboard(key, x, y):
     elif key == b's':
         var_globals.eye_y -= step
     elif key == b'm':
-        global last_t
-        last_t = glfw.get_time()
+        global last_time_garage
+        last_time_garage = glfw.get_time()    #pega o tempo que começou o sinal
         ABRIR = not ABRIR
     elif key == b'p':
         var_globals.eye_z -= 3
