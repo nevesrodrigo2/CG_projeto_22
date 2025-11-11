@@ -12,7 +12,20 @@ from carro import Car
 win_w, win_h = 900, 600
 tex_floor = None
 quadric = None
+# -------------------------------------------------------------------------------------------------------------------------- #
+# Postes
+post_height = 12.0
+post_length = 2.0
+post_color = (0.5, 0.5, 0.5, 1.0)
 
+post_positions = [
+    (15.0, 15.0, GL_LIGHT1),
+    (-15.0, 15.0, GL_LIGHT2),
+    (15.0, -15.0, GL_LIGHT3),
+    (-15.0, -15.0, GL_LIGHT4),
+]
+
+posts_on = True
 #------------------------------------------ #
 # Carro
 my_car = Car()
@@ -72,6 +85,54 @@ def setup():
     glClearColor(0.75, 0.75, 1.0, 1.0)
 
     tex_floor = load_texture(GRASS_PATH, repeat=True)
+
+def draw_post(x=0.0, z=0.0, height=12.0, radius=0.2, lamp_color=(1.0, 1.0, 0.8, 1.0), light_id=GL_LIGHT1):
+    # cilindro
+    glPushMatrix()
+    glColor3f(0.4, 0.4, 0.4)
+    glTranslatef(x, 0.0, z)
+    glRotatef(-90, 1, 0, 0)
+    glutSolidCylinder(radius, height, 16, 16)
+    glPopMatrix()
+
+    lamp_height = height - 0.2
+
+    glPushMatrix()
+    glTranslatef(x - 0.3, lamp_height, z)
+
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, lamp_color)
+    glColor3f(*lamp_color[:3])
+
+    glutSolidSphere(0.3, 16, 16)
+
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, [0.0, 0.0, 0.0, 1.0])
+
+    glPopMatrix()
+
+    update_post()
+    if posts_on:
+        update_post()
+        for x, z, lid in post_positions:
+            glLightfv(lid, GL_POSITION, (x, height - 0.2, z, 1.0))
+            glEnable(lid)
+    else:
+        for _, _, lid in post_positions:
+            glDisable(lid)
+
+    
+
+def update_post():
+    for _, _, lid in post_positions:
+        glLightfv(lid, GL_AMBIENT,  (0.05, 0.05, 0.05, 1.0))
+        glLightfv(lid, GL_DIFFUSE,  (0.6, 0.55, 0.5, 1.0))
+        glLightfv(lid, GL_SPECULAR, (0.5, 0.5, 0.45, 1.0))
+        glLightf(lid, GL_SPOT_EXPONENT, 4.0)
+        glLightf(lid, GL_SPOT_CUTOFF, 45.0)
+        glLightf(lid, GL_CONSTANT_ATTENUATION, 1.0)
+        glLightf(lid, GL_LINEAR_ATTENUATION, 0.02)
+        glLightf(lid, GL_QUADRATIC_ATTENUATION, 0.005)
+
+        glLightfv(lid, GL_SPOT_DIRECTION, (0.0, -1.0, 0.0))
 
 def draw_sun(angle_deg, distance=100.0, radius=3.0, color=(1.0,0.95,0.8,1.0)):
     ang = radians(angle_deg)
@@ -275,6 +336,11 @@ def display():
     sun_angle += 0.1
     if sun_angle >= 360.0:
         sun_angle -= 360.0
+        
+    draw_post(x=15, z=15, height=post_height, light_id=GL_LIGHT1)
+    draw_post(x=-15, z=15, height=post_height, light_id=GL_LIGHT2)
+    draw_post(x=15, z=-15, height=post_height, light_id=GL_LIGHT3)
+    draw_post(x=-15, z=-15, height=post_height, light_id=GL_LIGHT4)
 
     draw_garagem(0,0,0)
     my_car.update_car()
@@ -333,6 +399,9 @@ def keyboard(key, x, y):
         my_car.drive("right")
     elif key == b'u':
         my_car.change_car_camera_mode()
+    elif key == b'r':    # postes de luz
+        global posts_on
+        posts_on = not posts_on
     elif key in (b'\x1b', b'q'):
         try:
             glutLeaveMainLoop()
