@@ -6,8 +6,13 @@ from PIL import Image
 import sys, os
 from math import *
 
+import var_globals
+from carro import Car
+
 win_w, win_h = 900, 600
 tex_floor = None
+
+my_car = Car()
 
 # -------------------------------------------------------------------------------------------------------------------------- #
 # Sol
@@ -15,28 +20,7 @@ sun_angle = 45.0
 sun_distance = 100.0   
 sun_color = (1.0, 0.95, 0.8, 1.0)
 # -------------------------------------------------------------------------------------------------------------------------- #
-# camera dentro carro
-CameraDeCarro = False
-antigoeye = (0.0,5.0,14.0)
-antigoleye = (0.0,5.0,0.0)
-# -------------------------------------------------------------------------------------------------------------------------- #
-# carro
-car_speed = 0.0
-car_direction = 0.0
-car_x = 5
-car_y = 1.0
-car_z = 10.0
-left_door_angle = 0.0
-right_door_angle = 0.0
-left_door_open = False
-right_door_open = False
-lift = 1
-wheel_angle = 0.0
-steering_wheel_angle = 0.0
-steering_angle = 0.0  
-MAX_STEERING = 30.0   
-STEERING_SPEED = 5.0   
-# -------------------------------------------------------------------------------------------------------------------------- #
+
 # garagem
 ANGLE_GARAGE = 0
 SIZE = 5
@@ -46,14 +30,11 @@ START_TIME = 0
 GRUNGE_PATH = "Texturelabs_Grunge_197M.jpg"
 
 ABRIR = False
-eye_x, eye_y, eye_z = 0.0, 5.0, 14.0
-leye_x, leye_y, leye_z = 0.0, 5.0, 0
+
 def load_texture(path, repeat=True):
-    #asoscia-se a imagem à variavel, e se ela se repete
     if not os.path.isfile(path):
         print("Texture not found:", path); sys.exit(1)
 
-    #converte a imagem para tipo RGBA
     img = Image.open(path).convert("RGBA")
     w, h = img.size
     data = img.tobytes("raw", "RGBA", 0, -1)
@@ -61,27 +42,23 @@ def load_texture(path, repeat=True):
     tex_id = glGenTextures(1)
     glBindTexture(GL_TEXTURE_2D, tex_id)
 
-    # filtros  e  mipmaps (veremos esta parte mais tarde )
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT if repeat else GL_CLAMP_TO_EDGE)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT if repeat else GL_CLAMP_TO_EDGE)
 
-    # Criação de mipmaps com o GLU
     gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, w, h, GL_RGBA, GL_UNSIGNED_BYTE, data)
 
-    #devolve o ID de cada textura carregada que será usado quando os objectos forem desenhados
     return tex_id
 
 def setup():
     global tex_floor
     glEnable(GL_DEPTH_TEST)
     
-    # sol
     glEnable(GL_LIGHTING)
     glEnable(GL_LIGHT0)
 
-    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, [0.2, 0.2, 0.2, 1.0])  # ambient light
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
 
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
     glEnable(GL_TEXTURE_2D)
@@ -103,12 +80,10 @@ def draw_sun(angle_deg, distance=100.0, radius=3.0, color=(1.0,0.95,0.8,1.0)):
     glPushMatrix()
     glTranslatef(sx, sy, sz)
 
-    # Make it appear glowing
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, [color[0], color[1], color[2], color[3]])
     glColor3f(*color[:3])
     glutSolidSphere(radius, 32, 32)
     
-    # Reset emission to zero so other objects are not affected
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, [0.0,0.0,0.0,1.0])
     
     glPopMatrix()
@@ -130,14 +105,13 @@ def update_sun():
     glLightfv(GL_LIGHT0, GL_SPECULAR, sun_specular)
 
 def draw_floor():
-    S = 100.0                 
-    T = 10.0                  # Quantas vezes multiplicaremos a textura original no chão
+    S = 100.0
+    T = 10.0
     glBindTexture(GL_TEXTURE_2D, tex_floor)
-    glColor3f(1, 1, 1)        # Não mexer na cor
+    glColor3f(1, 1, 1)
     glNormal3f(0, 1, 0)
 
     glBegin(GL_QUADS)
-    #2d texture, ou seja ele vai do ponto 0,0 0,t t,t 0,t e deve repetir isso para o resto dos pontos
     glTexCoord2f(0.0, 0.0); glVertex3f(-S, 0.0,  S)
     glTexCoord2f(T,   0.0); glVertex3f( S, 0.0,  S)
     glTexCoord2f(T,    T ); glVertex3f( S, 0.0, -S)
@@ -148,262 +122,17 @@ def draw_wall_garagem(x,y,z,qntVigas=10,comprimento=10,altura=7, largura =2, com
     glPushMatrix()
     glNormal3f(0.0, 1.0, 0.0) 
     glTranslate(x,y,z)
-    #desenha a parede
     glColor3f(0.3,0.3,0.3)
     glBegin(GL_QUADS)
-
     glPopMatrix()
-
-def draw_wheel(pos = (0,0,0), radius = 0.7, width = 0.4, angle = 0.0, wheel_rotation = 0.0):
-    glPushMatrix()
-    glTranslatef(*pos)
-    glRotatef(wheel_rotation, 0,1,0)
-    glRotatef(angle, 0, 0, 1)
-    glColor3f(0.1, 0.1, 0.1)
-    glutSolidTorus(width / 2.0, radius, 12, 24)
-
-    # raios do pneu
-    for i in range(5):
-        glPushMatrix()
-        glRotatef(90, 0,1,0)
-        glRotatef(i * 360 / 5, 1, 0, 0)
-        glColor3f(0.8, 0.8, 0.8)
-        glTranslatef(0, 0, 0) 
-        glScalef(0.05, radius*2, 0.05)
-        glutSolidCube(1.0)
-        glPopMatrix()
-    glPopMatrix()
-
-def draw_car_wheels(car_size=(5.5, 2.5, 4.0), wheel_radius=0.7, wheel_width=0.4):
-    global lift, wheel_angle
-    length, width, height = car_size
-    front_wheel_radius = wheel_radius
-    back_wheel_radius = wheel_radius + 0.2
-
-    y_pos_front = -height / 2 
-    y_pos_back  = -height / 2
-
-    x_offset_front = -length + front_wheel_radius * 2
-    x_offset_back  = length - back_wheel_radius * 2
-    z_offset = width - wheel_width / 2
-    # tras
-    draw_wheel(pos=(x_offset_back, y_pos_back + lift, z_offset), radius=back_wheel_radius, width=wheel_width, angle=wheel_angle)
-    draw_wheel(pos=(x_offset_back, y_pos_back + lift, -z_offset), radius=back_wheel_radius, width=wheel_width, angle=wheel_angle)
-    # frente
-    draw_wheel(pos=(x_offset_front, y_pos_front + lift, z_offset), radius=front_wheel_radius, width=wheel_width, angle=wheel_angle, wheel_rotation=steering_angle)
-    draw_wheel(pos=(x_offset_front, y_pos_front + lift, -z_offset), radius=front_wheel_radius, width=wheel_width, angle=wheel_angle, wheel_rotation=steering_angle)
-
-
-def draw_car_door(pos = (0,0,0), size = (2.5,2.0,0.1), color = (0.8,0.1,0.1), angle = 0.0, side="left"):
-    
-    global left_door_angle, right_door_angle, left_door_open, right_door_open
-
-    t = glfw.get_time()
-    length, height, thickness = size
-    DOOR_SPEED = 90.0  # degrees per second
-    door_max_angle = 70
-
-    if not hasattr(draw_car_door, "last_t_left"):
-        draw_car_door.last_t_left = t
-    if not hasattr(draw_car_door, "last_t_right"):
-        draw_car_door.last_t_right = t
-
-    if side == "left":
-        dt = t - draw_car_door.last_t_left
-        draw_car_door.last_t_left = t
-        if left_door_open and left_door_angle < door_max_angle:
-            left_door_angle += DOOR_SPEED * dt
-            if left_door_angle > door_max_angle: left_door_angle = door_max_angle
-        elif not left_door_open and left_door_angle > 0:
-            left_door_angle -= DOOR_SPEED * dt
-            if left_door_angle < 0: left_door_angle = 0
-        angle = -left_door_angle
-    else:  # right
-        dt = t - draw_car_door.last_t_right
-        draw_car_door.last_t_right = t
-        if right_door_open and right_door_angle < door_max_angle:
-            right_door_angle += DOOR_SPEED * dt
-            if right_door_angle > door_max_angle: right_door_angle = door_max_angle
-        elif not right_door_open and right_door_angle > 0:
-            right_door_angle -= DOOR_SPEED * dt
-            if right_door_angle < 0: right_door_angle = 0
-        angle = right_door_angle
-
-    glPushMatrix()
-    glTranslatef(*pos)
-
-    glTranslatef(-length, 0, 0)
-    glRotatef(angle, 0,1,0)
-    glTranslatef(length/2, 0, 0)
-
-    glColor3f(*color)
-    glScalef(length/2, height/2, thickness/2)
-    glutSolidCube(2.0)
-    glPopMatrix()
-
-def draw_steering_wheel(pos, radius=0.5, thickness=0.05, color=(0.1,0.1,0.1)):
-    global steering_wheel_angle
-    glPushMatrix()
-    
-    # volante
-    glTranslatef(*pos)
-    glRotatef(90, 0,1,0)
-    glRotatef(steering_wheel_angle, 0,0,1)
-    glColor3f(*color)
-    glutSolidTorus(thickness / 2.0, radius, 12, 24) 
-
-    # raios do volante
-    for i in range(3):
-        glPushMatrix()
-        glRotatef(i * 120, 0, 0, 1)
-        glTranslatef(radius / 2.0, 0, 0)
-        glScalef(radius, thickness / 2.0, thickness / 2.0)
-        glutSolidCube(1.0)
-        glPopMatrix()
-    glPopMatrix()
-    
-    # cilindro central
-    glPushMatrix()
-    glTranslatef(*pos)
-    glRotatef(90, 0,1,0)
-    glRotatef(90,1,0,0)
-    glutSolidCylinder(thickness / 2.0, radius*3,12,1)
-    glPopMatrix()
-
-def draw_car(car_color=(0.596,0.729,0.835), car_size=(5.5, 2.5, 4.0)):
-    global car_x, car_y, car_z
-    global car_speed, wheel_angle, car_direction
-
-
-    length = car_size[0]
-    height = car_size[1]
-    width = car_size[2]
-
-    glPushMatrix()
-    glColor3f(*car_color)
-    glTranslatef(car_x, car_y + lift, car_z)
-    glRotatef(car_direction, 0, 1, 0)
-
-    # parte de tras
-    back_length = length * 0.25
-    glPushMatrix()
-    glTranslatef(length/2 + back_length, 0, 0)
-    glScalef(back_length, height/2, width/2)
-    glutSolidCube(2.0)
-    glPopMatrix()
-
-    # parte da frente
-    front_length = length * 0.25
-    glPushMatrix()
-    glTranslatef(-length + front_length, 0, 0)
-    glScalef(front_length, height/2, width/2)
-    glutSolidCube(2.0)
-    glPopMatrix()
-    
-    thickness = 0.05
-
-    # base do carro
-    glPushMatrix()
-    glColor3f(*car_color)
-    glTranslatef(0.0, -height / 2.0 + thickness / 2.0, 0.0)
-    glScalef(length/2, thickness/2, width/2)
-    glutSolidCube(2.0)
-    glPopMatrix()
-
-    door_side_length = 0.6
-    fixed_length_car_side = 1.0 - door_side_length
-    # laterais do carro
-    # lateral esquerda
-    glPushMatrix()
-    glTranslatef(length * (door_side_length / 2.0), 0.0, width / 2.0 - thickness / 2.0)
-    glScalef(length * fixed_length_car_side / 2.0, height / 2.0, thickness / 2.0)
-    glutSolidCube(2.0)
-    glPopMatrix()
-
-    glPushMatrix()
-    glTranslatef(length * (door_side_length / 2.0), 0.0, -width / 2.0 - thickness / 2.0)
-    glScalef(length * fixed_length_car_side / 2.0, height / 2.0, thickness / 2.0)
-    glutSolidCube(2.0)
-    glPopMatrix()
-
-    # esquerda porta
-    draw_car_door(
-        pos = (-length * (fixed_length_car_side / 2.0) + length * door_side_length / 2.0, 0.0, -width / 2.0 + thickness / 2.0),
-        size = (length * door_side_length, height, thickness),
-        color = car_color,
-        angle = right_door_angle,
-        side = "right"
-    )
-
-    # direita porta
-    draw_car_door(
-        pos = (-length * (fixed_length_car_side / 2.0) + length * door_side_length / 2.0, 0.0, width / 2.0 - thickness / 2.0),
-        size = (length * door_side_length, height, thickness),
-        color = car_color,
-        angle = left_door_angle,
-        side = "left"
-    )
-
-    draw_steering_wheel(pos=( -length / 4.0 - 1, height / 2.0, 0.0))
-
-    # frente e tras do carro
-    for car_end in [-1,1]:
-        glPushMatrix()
-        glColor3f(*car_color)
-
-        glTranslatef(length / 2 * car_end, 0.0, 0.0)
-        glScalef(thickness / 2, height / 2, width / 2.0)
-        glutSolidCube(2.0)
-        glPopMatrix()
-
-    # rodas
-    draw_car_wheels(car_size = car_size)
-
-    glPopMatrix()
-
-def update_car():
-    global car_speed, steering_angle, wheel_angle, car_x, car_z, car_direction, steering_wheel_angle
-    global CameraDeCarro
-    # menor
-    if abs(car_speed) < 0.001:
-       return
-
-    steering_wheel_angle += (steering_angle * 3.0 - steering_wheel_angle) * 0.1
-    
-    wheel_radius = 0.7
-    wheel_angle += (car_speed / (2 * 3.1415 * wheel_radius)) * 360.0
-
-    car_direction_rad = radians(car_direction)
-    steering_rad = radians(steering_angle)
-
-    L = 5.5  # distância entre eixos
-    car_direction += degrees((car_speed / L) * tan(steering_rad))
-    car_x -= car_speed * cos(-car_direction_rad - steering_rad)
-    car_z -= car_speed * sin(-car_direction_rad - steering_rad)
-    car_speed *= 0.95
-    if CameraDeCarro:
-        global eye_x,eye_y,eye_z, leye_x, leye_y, leye_z
-        eye_x = car_x
-        eye_y = car_y + 3
-        eye_z = car_z
-        leye_x = car_x - car_speed * cos(-car_direction_rad - steering_rad)
-        leye_y = eye_y
-        leye_z = car_z - car_speed * sin(-car_direction_rad - steering_rad)
-
-
 
 def draw_porta_garagem(x,y,z,comprimento = 7.5, altura = 5,faixas = 10):
     global ABRIR,ANGLE_GARAGE, last_t
     glPushMatrix()
     glNormal3f(0.0, 1.0, 0.0) 
-    glTranslate(x,y,z) #posição dada
-    #glTranslatef(0.0, altura/2, 0.0)  # posiciona acima do chão
+    glTranslate(x,y,z)
 
-    #começa abrir e fechar
-    #--------------------------------------//------------------------------------------
-    #mecanismo de abrir e fechar a porta
     if ABRIR and ANGLE_GARAGE <90:
-        # gira em torno do eixo superior
         t = glfw.get_time()
         ANGLE_GARAGE += 30.0 * max(0.0, t - last_t)
         last_t = t
@@ -411,23 +140,12 @@ def draw_porta_garagem(x,y,z,comprimento = 7.5, altura = 5,faixas = 10):
         t = glfw.get_time()
         ANGLE_GARAGE -= 30.0 * max(0.0, t - last_t)
         last_t = t 
-    if ANGLE_GARAGE > 90: #teste de erros caso a garagem vá muito para cima ou para baixo
-        ANGLE_GARAGE = 90
-    elif ANGLE_GARAGE < 0:
-        ANGLE_GARAGE = 0
-    glTranslatef(0.0, altura, 0.0) # faz com que as tranformações ocorram no eixo superior
-    glRotatef(ANGLE_GARAGE, 1, 0, 0)  
-    glTranslatef(0.0, -altura, 0.0)
-    #acabar o mecanismo de fechar a porta
-    #------------------------------------------//----------------------------------------
+    ANGLE_GARAGE = max(0.0, min(ANGLE_GARAGE, 90))
 
-    #Desenhar o retangulo da garagem
-    #glScalef(0.03,1,1.3)
-    #glutSolidCube(size)
-    #defenir pontos
-    #--------------------------------------//--------------------------------------------
-    #parte da frente do portão
-    #desenha a figura primeiro no centro
+    glTranslatef(0.0, altura, 0.0)
+    glRotatef(ANGLE_GARAGE, 1, 0, 0)
+    glTranslatef(0.0, -altura, 0.0)
+
     altura_per_faixa = altura / faixas
     y_atual = 0
     for i in range(faixas):
@@ -441,21 +159,19 @@ def draw_porta_garagem(x,y,z,comprimento = 7.5, altura = 5,faixas = 10):
         glEnd()
         y_atual += altura_per_faixa
 
-    glColor3f(0.7, 0.8, 0.7)#usa uma cor escura para para o portão
+    glColor3f(0.7, 0.8, 0.7)
     glPopMatrix()
 
 
 def display():
-    global eye_x,eye_y,eye_z
-    global leye_x,leye_y,leye_z
     global sun_angle, sun_color, sun_distance
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
-    gluLookAt(eye_x, eye_y, eye_z,
-              leye_x, leye_y, leye_z,
+    gluLookAt(var_globals.eye_x, var_globals.eye_y, var_globals.eye_z,
+              var_globals.leye_x, var_globals.leye_y, var_globals.leye_z,
               0.0, 1.0, 0.0) 
 
     glLightfv(GL_LIGHT0, GL_POSITION, (0.0, 10.0, 5.0, 1.0))
@@ -468,8 +184,8 @@ def display():
 
     draw_floor()
     draw_porta_garagem(0,0,0)
-    update_car()
-    draw_car()
+    my_car.update_car()
+    my_car.draw_car()
 
     glutSwapBuffers()
 
@@ -483,69 +199,48 @@ def reshape(w, h):
 
 from math import sqrt,cos,sin,atan2
 def keyboard(key, x, y):
-    global eye_x, eye_y,eye_z
-    global leye_x,leye_y,leye_z
     global ABRIR
-    global left_door_open, right_door_open, steering_wheel_angle, car_speed, car_direction, steering_angle
-    global CameraDeCarro,antigoeye,antigoleye
+    global my_car
     
     step = 0.2
     step_angle = 0.1
     if key == b'a': 
-        r = sqrt(eye_x ** 2 + eye_z ** 2)
-        tetha = atan2(eye_z, eye_x) + step_angle
-        eye_x = r * cos(tetha)
-        eye_z = r * sin(tetha)
-    elif key == b'd':  # Rotate right
-        r = sqrt(eye_x ** 2 + eye_z ** 2)
-        tetha = atan2(eye_z, eye_x) - step_angle
-        eye_x = r * cos(tetha)
-        eye_z = r * sin(tetha)
+        r = sqrt(var_globals.eye_x ** 2 + var_globals.eye_z ** 2)
+        tetha = atan2(var_globals.eye_z, var_globals.eye_x) + step_angle
+        var_globals.eye_x = r * cos(tetha)
+        var_globals.eye_z = r * sin(tetha)
+    elif key == b'd':
+        r = sqrt(var_globals.eye_x ** 2 + var_globals.eye_z ** 2)
+        tetha = atan2(var_globals.eye_z, var_globals.eye_x) - step_angle
+        var_globals.eye_x = r * cos(tetha)
+        var_globals.eye_z = r * sin(tetha)
     elif key == b'w':
-        eye_y +=step
+        var_globals.eye_y += step
     elif key == b's':
-        eye_y -= step
+        var_globals.eye_y -= step
     elif key == b'm':
         global last_t
-        last_t = glfw.get_time()    #pega o tempo que começou o sinal
+        last_t = glfw.get_time()
         ABRIR = not ABRIR
     elif key == b'p':
-        eye_z -= 3
+        var_globals.eye_z -= 3
     elif key == b'o':
-        eye_z += 3
-    # portas carroww
-    elif key == b'h':  # direita porta
-        right_door_open = not right_door_open
-    elif key == b'g':  # esquerda porta
-        left_door_open = not left_door_open
-
+        var_globals.eye_z += 3
+    elif key == b'h':
+        my_car.toggle_door("right")
+    elif key == b'g':
+        my_car.toggle_door("left")
     elif key == b'i':
-        car_speed = 0.2
+        my_car.drive("forward")
     elif key == b'k':
-        car_speed = -0.2
+        my_car.drive("backward")
     elif key == b'j':
-        steering_angle += STEERING_SPEED
-        if steering_angle > MAX_STEERING:
-            steering_angle = MAX_STEERING
-
-        steering_wheel_angle = steering_angle * 3.0
+        my_car.drive("left")
     elif key == b'l':
-        steering_angle -= STEERING_SPEED
-        if steering_angle < -MAX_STEERING:
-            steering_angle = -MAX_STEERING
-
-        steering_wheel_angle = steering_angle * 3.0
+        my_car.drive("right")
     elif key == b'u':
-        CameraDeCarro = not CameraDeCarro
-        if CameraDeCarro:
-            antigoeye = (eye_x,eye_y,eye_z)
-            antigoleye = (leye_x,leye_y,leye_z)            
-        else:
-            eye_x,eye_y,eye_z = antigoeye
-            leye_x,leye_y,leye_z = antigoleye
-        
-
-    elif key in (b'\x1b', b'q'):  # ESC or q
+        my_car.change_car_camera_mode()
+    elif key in (b'\x1b', b'q'):
         try:
             glutLeaveMainLoop()
         except Exception:
