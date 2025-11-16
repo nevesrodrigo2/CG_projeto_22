@@ -88,6 +88,30 @@ def setup():
 
     tex_floor = load_texture(TILE_PATH, repeat=True)
 
+
+def draw_sphere(centro = (0,0,0),color = (0.85, 0.65, 0.35), raio = 1):
+    glPushMatrix()
+    glTranslatef(*centro)
+    glColor3f(*color)
+    #glRotatef(90, 1, 0, 0)      # rodar 90° em X
+    gluSphere(quadric, raio, 48, 32)
+    glPopMatrix()
+
+def draw_circle(raio, centro = (0,0,0)):
+    glPushMatrix()
+    glTranslatef(*centro)
+    gluDisk(quadric,0.0,raio,50,1)
+    glPopMatrix()
+    
+def draw_cylinder(centro = (0,0,0), color = (0.85, 0.65, 0.35), base = 1.0,top = 1.0,height = 3):
+    glPushMatrix()
+    glColor3f(*color)
+    glTranslatef(*centro)
+    draw_circle(base)
+    draw_circle(top,(0,0,+height))
+    gluCylinder(quadric, base, top, height, 48, 32)
+    glPopMatrix()
+
 def draw_post(x=0.0, z=0.0, height=12.0, radius=0.2, lamp_color=(1.0, 1.0, 0.8, 1.0), light_id=GL_LIGHT1):
     # cilindro
     glPushMatrix()
@@ -184,28 +208,7 @@ def draw_floor():
     glTexCoord2f(0.0,  T ); glVertex3f(-S, 0.0, -S)
     glEnd()
 
-def draw_sphere(centro = (0,0,0),color = (0.85, 0.65, 0.35), raio = 1):
-    glPushMatrix()
-    glTranslatef(*centro)
-    glColor3f(*color)
-    #glRotatef(90, 1, 0, 0)      # rodar 90° em X
-    gluSphere(quadric, raio, 48, 32)
-    glPopMatrix()
 
-def draw_circle(raio, centro = (0,0,0)):
-    glPushMatrix()
-    glTranslatef(*centro)
-    gluDisk(quadric,0.0,raio,50,1)
-    glPopMatrix()
-    
-def draw_cylinder(centro = (0,0,0), color = (0.85, 0.65, 0.35), base = 1.0,top = 1.0,height = 3):
-    glPushMatrix()
-    glColor3f(*color)
-    glTranslatef(*centro)
-    draw_circle(base)
-    draw_circle(top,(0,0,+height))
-    gluCylinder(quadric, base, top, height, 48, 32)
-    glPopMatrix()
 
 #def draw_poste_iluminacao(pos = (0,0,0),height = 5):
     
@@ -307,16 +310,27 @@ def draw_porta_garagem(x,y,z,comprimento = 7.5, altura = 5,faixas = 10):
 def draw_garagem(x,y,z):
     comprimento_porta = 7.5
     altura_porta = 5
-    comprimento_parede = 10
+    comprimento_parede = 15
     altura_parede = 7
     set_material_wood()
     draw_porta_garagem(x,y,z,comprimento=7.5,altura=5,faixas=10)
-    set_material_metal()
-    draw_wall_garagem(x+comprimento_porta/2,y,z+altura_porta, angle_rotation=90,qntVigas=11,comprimento_viga=0.10)
-    draw_wall_garagem(x+-comprimento_porta/2,y,z+altura_porta, angle_rotation=90,qntVigas=11, comprimento_viga=-0.1)
+
+    draw_wall_garagem(x+comprimento_porta/2,y,
+                      z+comprimento_parede/2, 
+                      angle_rotation=90,
+                      qntVigas=11,
+                      comprimento_viga=0.10,
+                      comprimento=comprimento_parede)
+    
+    draw_wall_garagem(x+-comprimento_porta/2,y,z+comprimento_parede/2,
+                       angle_rotation=90,qntVigas=11, comprimento_viga=-0.1
+                       ,comprimento=comprimento_parede)
+
     draw_wall_garagem(x,y+altura_porta,z,angle_rotation= 0,comprimento=7.5,altura = 2,comprimento_viga=-0.1)
+    
     draw_wall_garagem(x,y,z+comprimento_parede,angle_rotation= 0,comprimento=7.5,comprimento_viga=0.1)
-    draw_teto_garagem(x,y+altura_parede,z)
+    
+    draw_teto_garagem(x,y+altura_parede,z,largura=comprimento_parede)
 
 def set_material_metal():
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.25, 0.25, 0.25, 1])
@@ -398,28 +412,31 @@ def keyboard(key, x, y):
     
     step = 0.2
     step_angle = 0.1
-    if key == b'a': 
-        r = sqrt(var_globals.eye_x ** 2 + var_globals.eye_z ** 2)
-        tetha = atan2(var_globals.eye_z, var_globals.eye_x) + step_angle
-        var_globals.eye_x = r * cos(tetha)
-        var_globals.eye_z = r * sin(tetha)
-    elif key == b'd':
-        r = sqrt(var_globals.eye_x ** 2 + var_globals.eye_z ** 2)
-        tetha = atan2(var_globals.eye_z, var_globals.eye_x) - step_angle
-        var_globals.eye_x = r * cos(tetha)
-        var_globals.eye_z = r * sin(tetha)
-    elif key == b'w':
-        var_globals.eye_y += step
-    elif key == b's':
-        var_globals.eye_y -= step
-    elif key == b'm':
+    if not my_car.CameraDeCarro:
+        if key == b'a': 
+            r = sqrt(var_globals.eye_x ** 2 + var_globals.eye_z ** 2)
+            tetha = atan2(var_globals.eye_z, var_globals.eye_x) + step_angle
+            var_globals.eye_x = r * cos(tetha)
+            var_globals.eye_z = r * sin(tetha)
+        elif key == b'd':
+            r = sqrt(var_globals.eye_x ** 2 + var_globals.eye_z ** 2)
+            tetha = atan2(var_globals.eye_z, var_globals.eye_x) - step_angle
+            var_globals.eye_x = r * cos(tetha)
+            var_globals.eye_z = r * sin(tetha)
+        elif key == b'w':
+            var_globals.eye_y += step
+        elif key == b's':
+            var_globals.eye_y -= step
+        elif key == b'p':
+            var_globals.eye_z -= 3
+        elif key == b'o':
+            var_globals.eye_z += 3
+    
+    #funciona sempre
+    if key == b'm':
         global last_time_garage
         last_time_garage = glfw.get_time()    #pega o tempo que começou o sinal
         ABRIR = not ABRIR
-    elif key == b'p':
-        var_globals.eye_z -= 3
-    elif key == b'o':
-        var_globals.eye_z += 3
     elif key == b'h':
         my_car.toggle_door("right")
     elif key == b'g':

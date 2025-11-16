@@ -18,7 +18,7 @@ class Car:
     # carro state
     car_speed = 0.0
     acceleration = 0.2
-    car_direction = 90.0
+    car_direction = 00.0
     car_x = 0.0
     car_y = 1.0
     car_z = -20.0
@@ -216,6 +216,14 @@ class Car:
         glPopMatrix()
 
     def update_car(self):
+        if self.CameraDeCarro:
+            car_direction_rad = radians(self.car_direction -90)
+            var_globals.eye_x = self.car_x
+            var_globals.eye_y = self.car_y + 3
+            var_globals.eye_z = self.car_z
+            var_globals.leye_x = self.car_x + sin(car_direction_rad)*2
+            var_globals.leye_y = var_globals.eye_y
+            var_globals.leye_z = self.car_z + cos(car_direction_rad)*2
         if abs(self.car_speed) < 0.001:
             return
 
@@ -232,13 +240,6 @@ class Car:
         self.car_z -= self.car_speed * sin(-car_direction_rad - steering_rad)
         self.car_speed *= 0.95
 
-        if self.CameraDeCarro:
-            var_globals.eye_x = self.car_x
-            var_globals.eye_y = self.car_y + 3
-            var_globals.eye_z = self.car_z
-            var_globals.leye_x = self.car_x - self.car_speed * cos(-car_direction_rad - steering_rad)
-            var_globals.leye_y = var_globals.eye_y
-            var_globals.leye_z = self.car_z - self.car_speed * sin(-car_direction_rad - steering_rad)
 
     def drive(self, dir: str):
         if dir == "forward":
