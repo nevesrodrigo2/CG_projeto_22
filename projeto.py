@@ -329,7 +329,7 @@ def keyboard(key, x, y):
     
     #funciona sempre
     if key == b'm':
-        garagem.last_time_garage = glfw.get_time()    #pega o tempo que começou o sinal
+        garagem.last_time_garage = glfw.get_time()    #pega o tempo que começou o
         garagem.Abrir = not garagem.Abrir
     elif key == b'h':
         my_car.toggle_door("right")
