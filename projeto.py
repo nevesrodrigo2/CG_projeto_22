@@ -42,8 +42,9 @@ SIZE = 5
 
 START_TIME = 0
 
-GRUNGE_PATH = "Texturelabs_Grunge_197M.jpg"
-GRASS_PATH = "relva.png"
+GRUNGE_PATH = "img/Texturelabs_Grunge_197M.jpg"
+GRASS_PATH = "img/relva.png"
+TILE_PATH = "img/mosaico.jpg"
 ABRIR = False
 
 def load_texture(path, repeat=True):
@@ -66,6 +67,7 @@ def load_texture(path, repeat=True):
 
     return tex_id
 
+
 def setup():
     global tex_floor
     glEnable(GL_DEPTH_TEST)
@@ -84,7 +86,7 @@ def setup():
     glShadeModel(GL_FLAT)
     glClearColor(0.75, 0.75, 1.0, 1.0)
 
-    tex_floor = load_texture(GRASS_PATH, repeat=True)
+    tex_floor = load_texture(TILE_PATH, repeat=True)
 
 def draw_post(x=0.0, z=0.0, height=12.0, radius=0.2, lamp_color=(1.0, 1.0, 0.8, 1.0), light_id=GL_LIGHT1):
     # cilindro
