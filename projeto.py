@@ -41,8 +41,6 @@ sun_color = (1.0, 0.95, 0.8, 1.0)
 garagem = Garagem()
 
 
-SIZE = 5
-
 
 GRUNGE_PATH = "img/Texturelabs_Grunge_197M.jpg"
 GRASS_PATH = "img/relva.png"
@@ -302,16 +300,20 @@ def keyboard(key, x, y):
     step = 0.2
     step_angle = 0.1
     if not my_car.CameraDeCarro:
-        if key == b'a': 
-            r = sqrt(var_globals.eye_x ** 2 + var_globals.eye_z ** 2)
-            tetha = atan2(var_globals.eye_z, var_globals.eye_x) + step_angle
-            var_globals.eye_x = r * cos(tetha)
-            var_globals.eye_z = r * sin(tetha)
+        if key == b'a':
+            subx = var_globals.eye_x - var_globals.leye_x
+            subz = var_globals.eye_z - var_globals.leye_z
+            r = sqrt(subx ** 2 + subz ** 2)
+            tetha = atan2(subz, subx) + step_angle
+            var_globals.eye_x = var_globals.leye_x + r * cos(tetha)
+            var_globals.eye_z = var_globals.leye_z + r * sin(tetha)
         elif key == b'd':
-            r = sqrt(var_globals.eye_x ** 2 + var_globals.eye_z ** 2)
-            tetha = atan2(var_globals.eye_z, var_globals.eye_x) - step_angle
-            var_globals.eye_x = r * cos(tetha)
-            var_globals.eye_z = r * sin(tetha)
+            subx = var_globals.eye_x - var_globals.leye_x
+            subz = var_globals.eye_z - var_globals.leye_z
+            r = sqrt(subx ** 2 + subz ** 2)
+            tetha = atan2(subz, subx) - step_angle
+            var_globals.eye_x = var_globals.leye_x + r * cos(tetha)
+            var_globals.eye_z = var_globals.leye_z + r * sin(tetha)
         elif key == b'w':
             var_globals.eye_y += step
         elif key == b's':
@@ -326,6 +328,26 @@ def keyboard(key, x, y):
             tetha = atan2(var_globals.eye_z, var_globals.eye_x)
             var_globals.eye_x = dist * cos(tetha)
             var_globals.eye_z = dist * sin(tetha)
+        elif key == b'i':
+            var_globals.leye_y += 2
+        elif key ==b'k':
+            var_globals.leye_y -= 2
+        elif key ==b'j':
+            vetorX = var_globals.leye_x - var_globals.eye_x
+            vetorZ = var_globals.leye_z - var_globals.eye_z
+            length = sqrt(vetorX**2 + vetorZ**2)
+            perpX = -vetorZ / length
+            perpZ =  vetorX / length
+            var_globals.leye_x += -perpX
+            var_globals.leye_z += -perpZ
+        elif key ==b'l':
+            vetorX = var_globals.leye_x - var_globals.eye_x
+            vetorZ = var_globals.leye_z - var_globals.eye_z
+            length = sqrt(vetorX**2 + vetorZ**2)
+            perpX = -vetorZ / length
+            perpZ =  vetorX / length
+            var_globals.leye_x += perpX 
+            var_globals.leye_z += perpZ
     
     #funciona sempre
     if key == b'm':
