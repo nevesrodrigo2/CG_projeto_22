@@ -309,13 +309,44 @@ def draw_garagem(x,y,z):
     altura_porta = 5
     comprimento_parede = 10
     altura_parede = 7
+    set_material_wood()
     draw_porta_garagem(x,y,z,comprimento=7.5,altura=5,faixas=10)
+    set_material_metal()
     draw_wall_garagem(x+comprimento_porta/2,y,z+altura_porta, angle_rotation=90,qntVigas=11,comprimento_viga=0.10)
     draw_wall_garagem(x+-comprimento_porta/2,y,z+altura_porta, angle_rotation=90,qntVigas=11, comprimento_viga=-0.1)
     draw_wall_garagem(x,y+altura_porta,z,angle_rotation= 0,comprimento=7.5,altura = 2,comprimento_viga=-0.1)
     draw_wall_garagem(x,y,z+comprimento_parede,angle_rotation= 0,comprimento=7.5,comprimento_viga=0.1)
     draw_teto_garagem(x,y+altura_parede,z)
 
+def set_material_metal():
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.25, 0.25, 0.25, 1])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.4, 0.4, 0.4, 1])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.77, 0.77, 0.77, 1])
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 90.0)
+
+def set_material_plastic():
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.1, 0.1, 0.1, 1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.3, 0.3, 0.8, 1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.2, 0.2, 0.2, 1.0])
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 20.0)
+
+def set_material_wood():
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.3, 0.2, 0.1, 1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.6, 0.4, 0.2, 1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 5.0)
+
+def set_material_rubber():
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.02, 0.02, 0.02, 1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.01, 0.01, 0.01, 1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.0, 0.0, 0.0, 1.0])
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 1.0)
+
+def set_material_glass():
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.1, 0.2, 0.25, 0.3])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.2, 0.4, 0.5, 0.3])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.8, 0.9, 1.0, 1.0])
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 100.0)
 
 def display():
     global sun_angle, sun_color, sun_distance
@@ -331,6 +362,7 @@ def display():
     update_sun()
 
     glEnable(GL_TEXTURE_2D)
+    set_material_glass()
     draw_floor()
 
     glDisable(GL_TEXTURE_2D)
@@ -346,6 +378,7 @@ def display():
 
     draw_garagem(0,0,0)
     my_car.update_car()
+    set_material_plastic()
     my_car.draw_car()
 
     glutSwapBuffers()
