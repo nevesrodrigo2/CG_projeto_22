@@ -71,10 +71,9 @@ def setup():
     glEnable(GL_DEPTH_TEST)
     
     glEnable(GL_LIGHTING)
-    glEnable(GL_LIGHT0)
+    # glEnable(GL_LIGHT0)
 
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
-
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
     glEnable(GL_TEXTURE_2D)
 
@@ -84,7 +83,6 @@ def setup():
     glShadeModel(GL_SMOOTH)
     glEnable(GL_NORMALIZE)
     glClearColor(0.75, 0.75, 1.0, 1.0)
-
 
     tex_floor = load_texture(TILE_PATH, repeat=True)
 
@@ -108,6 +106,7 @@ def draw_circle(raio, centro = (0,0,0)):
     glPopMatrix()
     
 def draw_cylinder(centro = (0,0,0), color = (0.85, 0.65, 0.35), base = 1.0,top = 1.0,height = 3):
+    global quadric
     glPushMatrix()
     glColor3f(*color)
     glTranslatef(*centro)
@@ -116,7 +115,7 @@ def draw_cylinder(centro = (0,0,0), color = (0.85, 0.65, 0.35), base = 1.0,top =
     gluCylinder(quadric, base, top, height, 48, 32)
     glPopMatrix()
 
-def draw_post(x=0.0, z=0.0, height=12.0, radius=0.2, lamp_color=(1.0, 1.0, 0.8, 1.0), light_id=GL_LIGHT1):
+def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1.0), light_id=GL_LIGHT1):
     # cilindro do poste
     glPushMatrix()
     glColor3f(0.4, 0.4, 0.4)
@@ -131,7 +130,7 @@ def draw_post(x=0.0, z=0.0, height=12.0, radius=0.2, lamp_color=(1.0, 1.0, 0.8, 
     glTranslatef(x - 0.3, lamp_height, z)
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, lamp_color)
     glColor3f(*lamp_color[:3])
-    glutSolidSphere(0.3, 16, 16)
+    glutSolidSphere(0.6, 16, 16)
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, [0.0, 0.0, 0.0, 1.0])
     glPopMatrix()
     
@@ -155,6 +154,17 @@ def update_post():
 
         glLightfv(lid, GL_SPOT_DIRECTION, (0.0, -1.0, 0.0))
 
+        glLightfv(lid, GL_SPOT_DIRECTION, (0.0, -1.0, 0.0))
+
+        if posts_on:
+            for x, z, lid in post_positions:
+
+                glEnable(lid)
+                glLightfv(lid, GL_POSITION, (x, post_height - 0.2, z, 1.0))
+        else:
+            for _, _, lid in post_positions:
+                glDisable(lid)
+
 def draw_sun(angle_deg, distance=100.0, radius=3.0, color=(1.0,0.95,0.8,1.0)):
     ang = radians(angle_deg)
     sx = distance * cos(ang)
@@ -175,6 +185,7 @@ def draw_sun(angle_deg, distance=100.0, radius=3.0, color=(1.0,0.95,0.8,1.0)):
 def update_sun():
     global sun_angle, sun_distance, sun_color
 
+    
     ang = radians(sun_angle)
     sun_x = sun_distance * cos(ang)
     sun_y = sun_distance * sin(ang)
@@ -192,15 +203,15 @@ def update_sun():
     # ajustar de acordo com a altura Y do sol
     glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, [0.0, -1.0, 0.0])
     if sun_y > 0:
-        glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 180.0)  # aumentar para o maximo
+        # glEnable(GL_LIGHT0)
+        glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 180.0)
     else:
-        glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 90.0)  # menos abaixo do solo
+        glDisable(GL_LIGHT0)
     glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 2.0) 
 
 def draw_floor():
     S = 100.0
     T = 10.0
-    glBindTexture(GL_TEXTURE_2D, tex_floor)
     glColor3f(1, 1, 1)
 
     glBegin(GL_QUADS)
@@ -241,6 +252,11 @@ def set_material_glass():
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.8, 0.9, 1.0, 1.0])
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 100.0)
 
+def set_material_floor():
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, [1.0, 1.0, 1.0, 1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.2, 0.2, 0.2, 1.0])
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 10.0)
+
 def display():
     global sun_angle, sun_color, sun_distance
 
@@ -253,22 +269,14 @@ def display():
               0.0, 1.0, 0.0) 
 
     update_sun()
-
-    
     update_post()
-    if posts_on:
-        for x, z, lid in post_positions:
-            glLightfv(lid, GL_POSITION, (x - 0.3, post_height - 0.2, z, 1.0))
-            glEnable(lid)
-    else:
-        for _, _, lid in post_positions:
-            glDisable(lid)
 
+    # draw floor
+    set_material_floor()
     glEnable(GL_TEXTURE_2D)
-    set_material_glass()
     draw_floor()
-
     glDisable(GL_TEXTURE_2D)
+
     draw_sun(sun_angle, distance=sun_distance, radius=3.0, color=sun_color)
     sun_angle += 0.1
     if sun_angle >= 360.0:
@@ -310,6 +318,9 @@ def keyboard(key, x, y):
     
     step = 0.2
     step_angle = 0.1
+
+    # se a camara estiver dentro do carro, não pode usar estas
+    # keys
     if not my_car.CameraDeCarro:
         if key == b'a':
             subx = var_globals.eye_x - var_globals.leye_x
@@ -360,7 +371,7 @@ def keyboard(key, x, y):
             var_globals.leye_x += perpX 
             var_globals.leye_z += perpZ
     
-    #funciona sempre
+    # funciona sempre
     if key == b'm':
         garagem.last_time_garage = glfw.get_time()    #pega o tempo que começou o
         garagem.Abrir = not garagem.Abrir
