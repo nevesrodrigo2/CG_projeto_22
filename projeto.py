@@ -10,7 +10,7 @@ import var_globals
 from carro import Car
 from Garagem import Garagem
 
-win_w, win_h = 900, 600
+win_w, win_h = 1280, 720
 tex_floor = None
 quadric = None
 # -------------------------------------------------------------------------------------------------------------------------- #
@@ -36,17 +36,14 @@ sun_angle = 45.0
 sun_distance = 100.0   
 sun_color = (1.0, 0.95, 0.8, 1.0)
 # -------------------------------------------------------------------------------------------------------------------------- #
-
 # garagem
 garagem = Garagem()
-
-
-SIZE = 5
-
-
+# -------------------------------------------------------------------------------------------------------------------------- #
+# Texturas
 GRUNGE_PATH = "img/Texturelabs_Grunge_197M.jpg"
 GRASS_PATH = "img/relva.png"
 TILE_PATH = "img/mosaico.jpg"
+# -------------------------------------------------------------------------------------------------------------------------- #
 
 def load_texture(path, repeat=True):
     if not os.path.isfile(path):
@@ -84,13 +81,17 @@ def setup():
     glEnable(GL_COLOR_MATERIAL)
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
 
-    glShadeModel(GL_FLAT)
+    glShadeModel(GL_SMOOTH)
+    glEnable(GL_NORMALIZE)
     glClearColor(0.75, 0.75, 1.0, 1.0)
+
 
     tex_floor = load_texture(TILE_PATH, repeat=True)
 
 
 def draw_sphere(centro = (0,0,0),color = (0.85, 0.65, 0.35), raio = 1):
+    global quadric
+
     glPushMatrix()
     glTranslatef(*centro)
     glColor3f(*color)
@@ -99,6 +100,8 @@ def draw_sphere(centro = (0,0,0),color = (0.85, 0.65, 0.35), raio = 1):
     glPopMatrix()
 
 def draw_circle(raio, centro = (0,0,0)):
+    global quadric
+
     glPushMatrix()
     glTranslatef(*centro)
     gluDisk(quadric,0.0,raio,50,1)
@@ -114,7 +117,7 @@ def draw_cylinder(centro = (0,0,0), color = (0.85, 0.65, 0.35), base = 1.0,top =
     glPopMatrix()
 
 def draw_post(x=0.0, z=0.0, height=12.0, radius=0.2, lamp_color=(1.0, 1.0, 0.8, 1.0), light_id=GL_LIGHT1):
-    # cilindro
+    # cilindro do poste
     glPushMatrix()
     glColor3f(0.4, 0.4, 0.4)
     glTranslatef(x, 0.0, z)
@@ -122,42 +125,33 @@ def draw_post(x=0.0, z=0.0, height=12.0, radius=0.2, lamp_color=(1.0, 1.0, 0.8, 
     glutSolidCylinder(radius, height, 16, 16)
     glPopMatrix()
 
+    # esfera da lampada
     lamp_height = height - 0.2
-
     glPushMatrix()
     glTranslatef(x - 0.3, lamp_height, z)
-
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, lamp_color)
     glColor3f(*lamp_color[:3])
-
     glutSolidSphere(0.3, 16, 16)
-
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, [0.0, 0.0, 0.0, 1.0])
-
     glPopMatrix()
-
-    update_post()
-    if posts_on:
-        update_post()
-        for x, z, lid in post_positions:
-            glLightfv(lid, GL_POSITION, (x, height - 0.2, z, 1.0))
-            glEnable(lid)
-    else:
-        for _, _, lid in post_positions:
-            glDisable(lid)
-
     
-
 def update_post():
+
     for _, _, lid in post_positions:
-        glLightfv(lid, GL_AMBIENT,  (0.05, 0.05, 0.05, 1.0))
-        glLightfv(lid, GL_DIFFUSE,  (0.6, 0.55, 0.5, 1.0))
-        glLightfv(lid, GL_SPECULAR, (0.5, 0.5, 0.45, 1.0))
-        glLightf(lid, GL_SPOT_EXPONENT, 4.0)
-        glLightf(lid, GL_SPOT_CUTOFF, 45.0)
-        glLightf(lid, GL_CONSTANT_ATTENUATION, 1.0)
-        glLightf(lid, GL_LINEAR_ATTENUATION, 0.02)
-        glLightf(lid, GL_QUADRATIC_ATTENUATION, 0.005)
+
+        # intensidade
+        glLightfv(lid, GL_AMBIENT,  (0.3, 0.3, 0.3, 1.0))
+        glLightfv(lid, GL_DIFFUSE,  (2.0, 2.0, 1.8, 1.0))
+        glLightfv(lid, GL_SPECULAR, (2.0, 2.0, 1.8, 1.0)) 
+
+        # aumentar a distancia da luz
+        glLightf(lid, GL_SPOT_CUTOFF, 90.0) 
+        glLightf(lid, GL_SPOT_EXPONENT, 5.0)  
+
+        # atenuacao
+        glLightf(lid, GL_CONSTANT_ATTENUATION, 0.5)
+        glLightf(lid, GL_LINEAR_ATTENUATION, 0.0005)
+        glLightf(lid, GL_QUADRATIC_ATTENUATION, 0.00005)
 
         glLightfv(lid, GL_SPOT_DIRECTION, (0.0, -1.0, 0.0))
 
@@ -180,14 +174,14 @@ def draw_sun(angle_deg, distance=100.0, radius=3.0, color=(1.0,0.95,0.8,1.0)):
 
 def update_sun():
     global sun_angle, sun_distance, sun_color
-    
+
     ang = radians(sun_angle)
     sun_x = sun_distance * cos(ang)
     sun_y = sun_distance * sin(ang)
     sun_z = 0.0
 
     intensity = 2
-    sun_position = [sun_x, sun_y, sun_z, 1.0]
+    sun_position = [sun_x, sun_y, sun_z, 1.0]  # posicao da luz
     sun_diffuse = [sun_color[0] * intensity, sun_color[1] * intensity, sun_color[2] * intensity , 1.0]
     sun_specular = [sun_color[0] * intensity, sun_color[1] * intensity, sun_color[2] * intensity, 1.0]
 
@@ -195,22 +189,27 @@ def update_sun():
     glLightfv(GL_LIGHT0, GL_DIFFUSE, sun_diffuse)
     glLightfv(GL_LIGHT0, GL_SPECULAR, sun_specular)
 
+    # ajustar de acordo com a altura Y do sol
+    glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, [0.0, -1.0, 0.0])
+    if sun_y > 0:
+        glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 180.0)  # aumentar para o maximo
+    else:
+        glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 90.0)  # menos abaixo do solo
+    glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 2.0) 
+
 def draw_floor():
     S = 100.0
     T = 10.0
     glBindTexture(GL_TEXTURE_2D, tex_floor)
     glColor3f(1, 1, 1)
-    glNormal3f(0, 1, 0)
 
     glBegin(GL_QUADS)
+    glNormal3f(0, 1, 0)
     glTexCoord2f(0.0, 0.0); glVertex3f(-S, 0.0,  S)
     glTexCoord2f(T,   0.0); glVertex3f( S, 0.0,  S)
     glTexCoord2f(T,    T ); glVertex3f( S, 0.0, -S)
     glTexCoord2f(0.0,  T ); glVertex3f(-S, 0.0, -S)
     glEnd()
-
-
-
 
 def set_material_metal():
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.25, 0.25, 0.25, 1])
@@ -238,7 +237,7 @@ def set_material_rubber():
 
 def set_material_glass():
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.1, 0.2, 0.25, 0.3])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.2, 0.4, 0.5, 0.3])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.8, 0.9, 1.0, 1.0])
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 100.0)
 
@@ -254,6 +253,16 @@ def display():
               0.0, 1.0, 0.0) 
 
     update_sun()
+
+    
+    update_post()
+    if posts_on:
+        for x, z, lid in post_positions:
+            glLightfv(lid, GL_POSITION, (x - 0.3, post_height - 0.2, z, 1.0))
+            glEnable(lid)
+    else:
+        for _, _, lid in post_positions:
+            glDisable(lid)
 
     glEnable(GL_TEXTURE_2D)
     set_material_glass()
@@ -292,6 +301,8 @@ def keyboard(key, x, y):
     
     step = 0.2
     step_angle = 0.1
+
+    # so pode ser utilizado se a camara nao estiver dentro do carro
     if not my_car.CameraDeCarro:
         if key == b'a': 
             r = sqrt(var_globals.eye_x ** 2 + var_globals.eye_z ** 2)
@@ -312,14 +323,17 @@ def keyboard(key, x, y):
         elif key == b'o':
             var_globals.eye_z += 3
     
-    #funciona sempre
+    # funciona sempre
+    # abrir a porta da garagem
     if key == b'm':
         garagem.last_time_garage = glfw.get_time()    #pega o tempo que começou o sinal
         garagem.Abrir = not garagem.Abrir
+    # abrir portas do carro
     elif key == b'h':
         my_car.toggle_door("right")
     elif key == b'g':
         my_car.toggle_door("left")
+    # conduzir o carro
     elif key == b'i':
         my_car.drive("forward")
     elif key == b'k':
@@ -328,9 +342,11 @@ def keyboard(key, x, y):
         my_car.drive("left")
     elif key == b'l':
         my_car.drive("right")
+    # mudar modo da camara do carro
     elif key == b'u':
         my_car.change_car_camera_mode()
-    elif key == b'r':    # postes de luz
+    # postes de luz
+    elif key == b'r':    
         global posts_on
         posts_on = not posts_on
     elif key in (b'\x1b', b'q'):
@@ -346,7 +362,7 @@ def main():
     glutInit(sys.argv)
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
     glutInitWindowSize(win_w, win_h)
-    glutCreateWindow(b"Pipeline Fixo (Flat) : Cubo e Chao texturados")
+    glutCreateWindow(b"Projeto CG Grupo 22")
     setup()
     glutDisplayFunc(display)
     glutReshapeFunc(reshape)
