@@ -293,6 +293,15 @@ def reshape(w, h):
     glLoadIdentity()
     gluPerspective(60.0, float(w)/float(h), 0.1, 1000.0)
 
+def specialKeyboard(key, x, y):
+    if key == GLUT_KEY_UP:
+        my_car.drive("forward")
+    elif key == GLUT_KEY_DOWN:
+        my_car.drive("backward")
+    elif key == GLUT_KEY_LEFT:
+        my_car.drive("left")
+    elif key == GLUT_KEY_RIGHT:
+        my_car.drive("right")
 
 from math import sqrt,cos,sin,atan2
 def keyboard(key, x, y):
@@ -304,29 +313,59 @@ def keyboard(key, x, y):
 
     # so pode ser utilizado se a camara nao estiver dentro do carro
     if not my_car.CameraDeCarro:
-        if key == b'a': 
-            r = sqrt(var_globals.eye_x ** 2 + var_globals.eye_z ** 2)
-            tetha = atan2(var_globals.eye_z, var_globals.eye_x) + step_angle
-            var_globals.eye_x = r * cos(tetha)
-            var_globals.eye_z = r * sin(tetha)
+        if key == b'a':
+            subx = var_globals.eye_x - var_globals.leye_x
+            subz = var_globals.eye_z - var_globals.leye_z
+            r = sqrt(subx ** 2 + subz ** 2)
+            tetha = atan2(subz, subx) + step_angle
+            var_globals.eye_x = var_globals.leye_x + r * cos(tetha)
+            var_globals.eye_z = var_globals.leye_z + r * sin(tetha)
         elif key == b'd':
-            r = sqrt(var_globals.eye_x ** 2 + var_globals.eye_z ** 2)
-            tetha = atan2(var_globals.eye_z, var_globals.eye_x) - step_angle
-            var_globals.eye_x = r * cos(tetha)
-            var_globals.eye_z = r * sin(tetha)
+            subx = var_globals.eye_x - var_globals.leye_x
+            subz = var_globals.eye_z - var_globals.leye_z
+            r = sqrt(subx ** 2 + subz ** 2)
+            tetha = atan2(subz, subx) - step_angle
+            var_globals.eye_x = var_globals.leye_x + r * cos(tetha)
+            var_globals.eye_z = var_globals.leye_z + r * sin(tetha)
         elif key == b'w':
             var_globals.eye_y += step
         elif key == b's':
             var_globals.eye_y -= step
         elif key == b'p':
-            var_globals.eye_z -= 3
+            dist = sqrt((var_globals.eye_x - var_globals.leye_x) ** 2 + (var_globals.eye_z - var_globals.leye_z) ** 2) - 5
+            tetha = atan2(var_globals.eye_z, var_globals.eye_x)
+            var_globals.eye_x = dist * cos(tetha)
+            var_globals.eye_z = dist * sin(tetha)
         elif key == b'o':
-            var_globals.eye_z += 3
+            dist = sqrt((var_globals.eye_x - var_globals.leye_x) ** 2 + (var_globals.eye_z - var_globals.leye_z) ** 2) + 5
+            tetha = atan2(var_globals.eye_z, var_globals.eye_x)
+            var_globals.eye_x = dist * cos(tetha)
+            var_globals.eye_z = dist * sin(tetha)
+        elif key == b'i':
+            var_globals.leye_y += 2
+        elif key ==b'k':
+            var_globals.leye_y -= 2
+        elif key ==b'j':
+            vetorX = var_globals.leye_x - var_globals.eye_x
+            vetorZ = var_globals.leye_z - var_globals.eye_z
+            length = sqrt(vetorX**2 + vetorZ**2)
+            perpX = -vetorZ / length
+            perpZ =  vetorX / length
+            var_globals.leye_x += -perpX
+            var_globals.leye_z += -perpZ
+        elif key ==b'l':
+            vetorX = var_globals.leye_x - var_globals.eye_x
+            vetorZ = var_globals.leye_z - var_globals.eye_z
+            length = sqrt(vetorX**2 + vetorZ**2)
+            perpX = -vetorZ / length
+            perpZ =  vetorX / length
+            var_globals.leye_x += perpX 
+            var_globals.leye_z += perpZ
     
     # funciona sempre
     # abrir a porta da garagem
     if key == b'm':
-        garagem.last_time_garage = glfw.get_time()    #pega o tempo que começou o sinal
+        garagem.last_time_garage = glfw.get_time()    #pega o tempo que começou o
         garagem.Abrir = not garagem.Abrir
     # abrir portas do carro
     elif key == b'h':
@@ -354,7 +393,6 @@ def keyboard(key, x, y):
             glutLeaveMainLoop()
         except Exception:
             sys.exit(0)
-    
     glutPostRedisplay()
 
 def main():
@@ -367,6 +405,7 @@ def main():
     glutDisplayFunc(display)
     glutReshapeFunc(reshape)
     glutKeyboardFunc(keyboard)
+    glutSpecialFunc(specialKeyboard)
     glutIdleFunc(display)
     glutMainLoop()
 
