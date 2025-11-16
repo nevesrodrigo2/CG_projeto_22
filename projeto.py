@@ -8,6 +8,7 @@ from math import *
 
 import var_globals
 from carro import Car
+from Garagem import Garagem
 
 win_w, win_h = 900, 600
 tex_floor = None
@@ -37,15 +38,15 @@ sun_color = (1.0, 0.95, 0.8, 1.0)
 # -------------------------------------------------------------------------------------------------------------------------- #
 
 # garagem
-ANGLE_GARAGE = 0
+garagem = Garagem()
+
+
 SIZE = 5
 
-START_TIME = 0
 
 GRUNGE_PATH = "img/Texturelabs_Grunge_197M.jpg"
 GRASS_PATH = "img/relva.png"
 TILE_PATH = "img/mosaico.jpg"
-ABRIR = False
 
 def load_texture(path, repeat=True):
     if not os.path.isfile(path):
@@ -210,127 +211,6 @@ def draw_floor():
 
 
 
-#def draw_poste_iluminacao(pos = (0,0,0),height = 5):
-    
-
-def draw_wall_garagem(x,y,z,angle_rotation = 0, qntVigas=10,comprimento=10,altura=7, largura =0.2, comprimento_viga = 0.1, cor_viga =(0.7,0.7,0.7)):
-    glPushMatrix()
-    glNormal3f(0.0, 1.0, 0.0) 
-    glTranslatef(x,y,z) 
-    #desenha a parede
-    glColor3f(0.2,0.2,0.2) # quase preeto
-    glRotatef(angle_rotation,0,1,0)
-    glBegin(GL_QUADS)
-    glVertex2f(-comprimento/2,0)
-    glVertex2f(comprimento/2,0)
-    glVertex2f(comprimento/2,altura)
-    glVertex2f(-comprimento/2,altura)
-    glEnd()
-    glPopMatrix()
-
-    glPushMatrix()
-    glColor3f(*cor_viga)
-    #glTranslatef(0,0,largura) #ficar ao lado da parede
-    comprimento_relacao = comprimento_viga/altura
-    dist_vigas = comprimento / (qntVigas) #começar e acabar com uma viga
-    largura_relacao = largura/altura 
-    glTranslatef(x,y+ altura/2,z)
-    glRotatef(angle_rotation,0,1,0)
-    glTranslatef(-dist_vigas * (qntVigas//2),0,comprimento_viga/2)
-    glScalef(largura_relacao,1,comprimento_relacao)
-    for i in range(qntVigas):
-        glPushMatrix()  
-        glTranslatef(i * dist_vigas / largura_relacao, 0,0)
-        glNormal3f(0.0, 1.0, 0.0) 
-        glRotatef(90,0,1,0)
-        glutSolidCube(altura)
-        glPopMatrix()
-
-    glPopMatrix()
-
-def draw_teto_garagem(x,y,z,comprimento = 7.5, largura = 10):
-    glPushMatrix()
-    glTranslatef(x,y,z)
-    glRotatef(90,1,0,0)
-    draw_wall_garagem(0,0,0,comprimento = comprimento,altura=largura,comprimento_viga=-0.1)
-    glPopMatrix()
-
-def draw_porta_garagem(x,y,z,comprimento = 7.5, altura = 5,faixas = 10):
-    global ABRIR,ANGLE_GARAGE, last_time_garage
-    glPushMatrix()
-    glNormal3f(0.0, 1.0, 0.0) 
-    glTranslatef(x,y,z) #posição dada
-    #glTranslatef(0.0, altura/2, 0.0)  # posiciona acima do chão
-
-    #começa abrir e fechar
-    #--------------------------------------//------------------------------------------
-    #mecanismo de abrir e fechar a porta
-    if ABRIR and ANGLE_GARAGE <90:
-        # gira em torno do eixo superior
-        t = glfw.get_time()
-        ANGLE_GARAGE += 30.0 * max(0.0, t - last_time_garage)
-        last_time_garage = t
-    elif not ABRIR and ANGLE_GARAGE > 0:
-        t = glfw.get_time()
-        ANGLE_GARAGE -= 30.0 * max(0.0, t - last_time_garage)
-        last_time_garage = t 
-    if ANGLE_GARAGE > 90: #teste de erros caso a garagem vá muito para cima ou para baixo
-        ANGLE_GARAGE = 90
-    elif ANGLE_GARAGE < 0:
-        ANGLE_GARAGE = 0
-    glTranslatef(0.0, altura, 0.0) # faz com que as tranformações ocorram no eixo superior
-    glRotatef(ANGLE_GARAGE, 1, 0, 0)  
-    glTranslatef(0.0, -altura, 0.0)
-    #acabar o mecanismo de fechar a porta
-    #------------------------------------------//----------------------------------------
-
-    #Desenhar o retangulo da garagem
-    #glScalef(0.03,1,1.3)
-    #glutSolidCube(size)
-    #defenir pontos
-    #--------------------------------------//--------------------------------------------
-    #parte da frente do portão
-    #desenha a figura primeiro no centro
-    altura_per_faixa = altura / faixas
-    y_atual = 0
-    for i in range(faixas):
-        tom = 0.4 + 0.05 * (i % 2)
-        glColor3f(tom, tom, tom)
-        glBegin(GL_QUADS)
-        glVertex2f(-comprimento/2,y_atual)
-        glVertex2f(comprimento/2,y_atual)
-        glVertex2f(comprimento/2,y_atual + altura_per_faixa)
-        glVertex2f(-comprimento/2,y_atual + altura_per_faixa)
-        glEnd()
-        y_atual += altura_per_faixa
-
-    glColor3f(0.7, 0.8, 0.7)#usa uma cor escura para para o portão
-    glPopMatrix()
-
-def draw_garagem(x,y,z):
-    comprimento_porta = 7.5
-    altura_porta = 5
-    comprimento_parede = 15
-    altura_parede = 7
-    set_material_wood()
-    draw_porta_garagem(x,y,z,comprimento=7.5,altura=5,faixas=10)
-
-    draw_wall_garagem(x+comprimento_porta/2,y,
-                      z+comprimento_parede/2, 
-                      angle_rotation=90,
-                      qntVigas=11,
-                      comprimento_viga=0.10,
-                      comprimento=comprimento_parede)
-    
-    draw_wall_garagem(x+-comprimento_porta/2,y,z+comprimento_parede/2,
-                       angle_rotation=90,qntVigas=11, comprimento_viga=-0.1
-                       ,comprimento=comprimento_parede)
-
-    draw_wall_garagem(x,y+altura_porta,z,angle_rotation= 0,comprimento=7.5,altura = 2,comprimento_viga=-0.1)
-    
-    draw_wall_garagem(x,y,z+comprimento_parede,angle_rotation= 0,comprimento=7.5,comprimento_viga=0.1)
-    
-    draw_teto_garagem(x,y+altura_parede,z,largura=comprimento_parede)
 
 def set_material_metal():
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.25, 0.25, 0.25, 1])
@@ -390,7 +270,7 @@ def display():
     draw_post(x=15, z=-15, height=post_height, light_id=GL_LIGHT3)
     draw_post(x=-15, z=-15, height=post_height, light_id=GL_LIGHT4)
 
-    draw_garagem(0,0,0)
+    garagem.draw_garagem(0,0,0)
     my_car.update_car()
     set_material_plastic()
     my_car.draw_car()
@@ -407,7 +287,7 @@ def reshape(w, h):
 
 from math import sqrt,cos,sin,atan2
 def keyboard(key, x, y):
-    global ABRIR
+    global garagem
     global my_car
     
     step = 0.2
@@ -434,9 +314,8 @@ def keyboard(key, x, y):
     
     #funciona sempre
     if key == b'm':
-        global last_time_garage
-        last_time_garage = glfw.get_time()    #pega o tempo que começou o sinal
-        ABRIR = not ABRIR
+        garagem.last_time_garage = glfw.get_time()    #pega o tempo que começou o sinal
+        garagem.Abrir = not garagem.Abrir
     elif key == b'h':
         my_car.toggle_door("right")
     elif key == b'g':
