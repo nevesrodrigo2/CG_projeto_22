@@ -284,6 +284,15 @@ def reshape(w, h):
     glLoadIdentity()
     gluPerspective(60.0, float(w)/float(h), 0.1, 1000.0)
 
+def specialKeyboard(key, x, y):
+    if key == GLUT_KEY_UP:
+        my_car.drive("forward")
+    elif key == GLUT_KEY_DOWN:
+        my_car.drive("backward")
+    elif key == GLUT_KEY_LEFT:
+        my_car.drive("left")
+    elif key == GLUT_KEY_RIGHT:
+        my_car.drive("right")
 
 from math import sqrt,cos,sin,atan2
 def keyboard(key, x, y):
@@ -308,9 +317,15 @@ def keyboard(key, x, y):
         elif key == b's':
             var_globals.eye_y -= step
         elif key == b'p':
-            var_globals.eye_z -= 3
+            dist = sqrt((var_globals.eye_x - var_globals.leye_x) ** 2 + (var_globals.eye_z - var_globals.leye_z) ** 2) - 5
+            tetha = atan2(var_globals.eye_z, var_globals.eye_x)
+            var_globals.eye_x = dist * cos(tetha)
+            var_globals.eye_z = dist * sin(tetha)
         elif key == b'o':
-            var_globals.eye_z += 3
+            dist = sqrt((var_globals.eye_x - var_globals.leye_x) ** 2 + (var_globals.eye_z - var_globals.leye_z) ** 2) + 5
+            tetha = atan2(var_globals.eye_z, var_globals.eye_x)
+            var_globals.eye_x = dist * cos(tetha)
+            var_globals.eye_z = dist * sin(tetha)
     
     #funciona sempre
     if key == b'm':
@@ -320,14 +335,6 @@ def keyboard(key, x, y):
         my_car.toggle_door("right")
     elif key == b'g':
         my_car.toggle_door("left")
-    elif key == b'i':
-        my_car.drive("forward")
-    elif key == b'k':
-        my_car.drive("backward")
-    elif key == b'j':
-        my_car.drive("left")
-    elif key == b'l':
-        my_car.drive("right")
     elif key == b'u':
         my_car.change_car_camera_mode()
     elif key == b'r':    # postes de luz
@@ -338,7 +345,6 @@ def keyboard(key, x, y):
             glutLeaveMainLoop()
         except Exception:
             sys.exit(0)
-    
     glutPostRedisplay()
 
 def main():
@@ -351,6 +357,7 @@ def main():
     glutDisplayFunc(display)
     glutReshapeFunc(reshape)
     glutKeyboardFunc(keyboard)
+    glutSpecialFunc(specialKeyboard)
     glutIdleFunc(display)
     glutMainLoop()
 
