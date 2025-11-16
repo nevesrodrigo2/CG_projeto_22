@@ -310,8 +310,6 @@ def keyboard(key, x, y):
     
     step = 0.2
     step_angle = 0.1
-
-    # so pode ser utilizado se a camara nao estiver dentro do carro
     if not my_car.CameraDeCarro:
         if key == b'a':
             subx = var_globals.eye_x - var_globals.leye_x
@@ -362,30 +360,17 @@ def keyboard(key, x, y):
             var_globals.leye_x += perpX 
             var_globals.leye_z += perpZ
     
-    # funciona sempre
-    # abrir a porta da garagem
+    #funciona sempre
     if key == b'm':
         garagem.last_time_garage = glfw.get_time()    #pega o tempo que começou o
         garagem.Abrir = not garagem.Abrir
-    # abrir portas do carro
     elif key == b'h':
         my_car.toggle_door("right")
     elif key == b'g':
         my_car.toggle_door("left")
-    # conduzir o carro
-    elif key == b'i':
-        my_car.drive("forward")
-    elif key == b'k':
-        my_car.drive("backward")
-    elif key == b'j':
-        my_car.drive("left")
-    elif key == b'l':
-        my_car.drive("right")
-    # mudar modo da camara do carro
     elif key == b'u':
         my_car.change_car_camera_mode()
-    # postes de luz
-    elif key == b'r':    
+    elif key == b'r':    # postes de luz
         global posts_on
         posts_on = not posts_on
     elif key in (b'\x1b', b'q'):
