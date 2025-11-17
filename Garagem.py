@@ -13,6 +13,32 @@ class Garagem:
     Abrir = False
     last_time_garage = 0
 
+    def set_material_porta_garagem(self, gray_value):
+        
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [gray_value*0.2]*3 + [1.0])
+        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [gray_value]*3 + [1.0])
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.5,0.5,0.5,1.0])
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50.0)
+
+    def set_material_base_porta_garagem(self):
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.7*0.2,0.8*0.2,0.7*0.2,1.0])
+        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.7,0.8,0.7,1.0])
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.5,0.5,0.5,1.0])
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 40.0)
+
+    def set_material_parede_escura(self):
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.2*0.2]*3 + [1.0])
+        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.2]*3 + [1.0])
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.1,0.1,0.1,1.0])
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 10.0)
+
+    def set_material_parede_viga(self, color=(0.7,0.7,0.7)):
+        r,g,b = color
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [r*0.2, g*0.2, b*0.2, 1.0])
+        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [r, g, b, 1.0])
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.6,0.6,0.6,1.0])
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 60.0)
+
     def draw_porta_garagem(self,x,y,z,comprimento = 7.5, altura = 5,faixas = 10):
         glPushMatrix()
         glNormal3f(0.0, 1.0, 0.0) 
@@ -42,7 +68,7 @@ class Garagem:
         y_atual = 0
         for i in range(faixas):
             tom = 0.4 + 0.05 * (i % 2)
-            glColor3f(tom, tom, tom)
+            self.set_material_porta_garagem(tom)
             glBegin(GL_QUADS)
             glVertex2f(-comprimento/2,y_atual)
             glVertex2f(comprimento/2,y_atual)
@@ -51,7 +77,7 @@ class Garagem:
             glEnd()
             y_atual += altura_per_faixa
 
-        glColor3f(0.7, 0.8, 0.7)#usa uma cor escura para para o portão
+        self.set_material_base_porta_garagem() # usa uma cor escura para para o portão
         glPopMatrix()
     
     def draw_wall_garagem(self,x,y,z,angle_rotation = 0, qntVigas=10,comprimento=10,altura=7, largura =0.2, comprimento_viga = 0.1, cor_viga =(0.7,0.7,0.7)):
@@ -59,7 +85,8 @@ class Garagem:
         glNormal3f(0.0, 1.0, 0.0) 
         glTranslatef(x,y,z) 
         #desenha a parede
-        glColor3f(0.2,0.2,0.2) # quase preeto
+
+        self.set_material_parede_escura() # quase preto
         glRotatef(angle_rotation,0,1,0)
         glBegin(GL_QUADS)
         glVertex2f(-comprimento/2,0)
@@ -70,7 +97,7 @@ class Garagem:
         glPopMatrix()
 
         glPushMatrix()
-        glColor3f(*cor_viga)
+        self.set_material_parede_viga()
         #glTranslatef(0,0,largura) #ficar ao lado da parede
         comprimento_relacao = comprimento_viga/altura
         dist_vigas = comprimento / (qntVigas) #começar e acabar com uma viga
@@ -126,7 +153,7 @@ class Garagem:
         y_atual = 0
         for i in range(faixas):
             tom = 0.4 + 0.05 * (i % 2)
-            glColor3f(tom, tom, tom)
+            self.set_material_porta_garagem(tom)
             glBegin(GL_QUADS)
             glVertex2f(-comprimento/2,y_atual)
             glVertex2f(comprimento/2,y_atual)
@@ -135,7 +162,7 @@ class Garagem:
             glEnd()
             y_atual += altura_per_faixa
 
-        glColor3f(0.7, 0.8, 0.7)#usa uma cor escura para para o portão
+        self.set_material_base_porta_garagem() # usa uma cor escura para para o portão
         glPopMatrix()
         
     def draw_garagem(self,x,y,z):

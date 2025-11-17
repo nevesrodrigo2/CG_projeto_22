@@ -71,14 +71,11 @@ def setup():
     glEnable(GL_DEPTH_TEST)
     
     glEnable(GL_LIGHTING)
-    # glEnable(GL_LIGHT0)
+    glEnable(GL_LIGHT0)
 
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
     glEnable(GL_TEXTURE_2D)
-
-    glEnable(GL_COLOR_MATERIAL)
-    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
 
     glShadeModel(GL_SMOOTH)
     glEnable(GL_NORMALIZE)
@@ -115,10 +112,10 @@ def draw_cylinder(centro = (0,0,0), color = (0.85, 0.65, 0.35), base = 1.0,top =
     gluCylinder(quadric, base, top, height, 48, 32)
     glPopMatrix()
 
-def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1.0), light_id=GL_LIGHT1):
+def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1.0), lid=GL_LIGHT1):
     # cilindro do poste
     glPushMatrix()
-    glColor3f(0.4, 0.4, 0.4)
+    set_material_light_post()
     glTranslatef(x, 0.0, z)
     glRotatef(-90, 1, 0, 0)
     glutSolidCylinder(radius, height, 16, 16)
@@ -127,43 +124,31 @@ def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1
     # esfera da lampada
     lamp_height = height - 0.2
     glPushMatrix()
+    set_material_light_bulb(lamp_color)
     glTranslatef(x - 0.3, lamp_height, z)
-    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, lamp_color)
-    glColor3f(*lamp_color[:3])
     glutSolidSphere(0.6, 16, 16)
-    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, [0.0, 0.0, 0.0, 1.0])
+    glPopMatrix()
+
+    glPushMatrix()
+    glEnable(lid)
+    glLightfv(lid, GL_POSITION, (x - 0.3, lamp_height, z, 1.0))
+    glLightfv(lid, GL_DIFFUSE, lamp_color)
+    glLightfv(lid, GL_SPECULAR, lamp_color)
+    glLightfv(lid, GL_AMBIENT, [0.1*c for c in lamp_color])
+    glLightf(lid, GL_CONSTANT_ATTENUATION, 0.5)
+    glLightf(lid, GL_LINEAR_ATTENUATION, 0.01)
+    glLightf(lid, GL_QUADRATIC_ATTENUATION, 0.001)
+    glLightf(lid, GL_SPOT_CUTOFF, 90.0)  # omnidirectional
     glPopMatrix()
     
 def update_post():
-
-    for _, _, lid in post_positions:
-
-        # intensidade
-        glLightfv(lid, GL_AMBIENT,  (0.3, 0.3, 0.3, 1.0))
-        glLightfv(lid, GL_DIFFUSE,  (2.0, 2.0, 1.8, 1.0))
-        glLightfv(lid, GL_SPECULAR, (2.0, 2.0, 1.8, 1.0)) 
-
-        # aumentar a distancia da luz
-        glLightf(lid, GL_SPOT_CUTOFF, 90.0) 
-        glLightf(lid, GL_SPOT_EXPONENT, 5.0)  
-
-        # atenuacao
-        glLightf(lid, GL_CONSTANT_ATTENUATION, 0.5)
-        glLightf(lid, GL_LINEAR_ATTENUATION, 0.0005)
-        glLightf(lid, GL_QUADRATIC_ATTENUATION, 0.00005)
-
-        glLightfv(lid, GL_SPOT_DIRECTION, (0.0, -1.0, 0.0))
-
-        glLightfv(lid, GL_SPOT_DIRECTION, (0.0, -1.0, 0.0))
-
-        if posts_on:
-            for x, z, lid in post_positions:
-
-                glEnable(lid)
-                glLightfv(lid, GL_POSITION, (x, post_height - 0.2, z, 1.0))
-        else:
-            for _, _, lid in post_positions:
-                glDisable(lid)
+    global posts_on
+    if posts_on:
+        for _, _, lid in post_positions:
+            glEnable(lid)
+    else:
+        for _, _, lid in post_positions:
+            glDisable(lid)
 
 def draw_sun(angle_deg, distance=100.0, radius=3.0, color=(1.0,0.95,0.8,1.0)):
     ang = radians(angle_deg)
@@ -175,11 +160,9 @@ def draw_sun(angle_deg, distance=100.0, radius=3.0, color=(1.0,0.95,0.8,1.0)):
     glTranslatef(sx, sy, sz)
 
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, [color[0], color[1], color[2], color[3]])
-    glColor3f(*color[:3])
     glutSolidSphere(radius, 32, 32)
     
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, [0.0,0.0,0.0,1.0])
-    
     glPopMatrix()
 
 def update_sun():
@@ -203,7 +186,7 @@ def update_sun():
     # ajustar de acordo com a altura Y do sol
     glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, [0.0, -1.0, 0.0])
     if sun_y > 0:
-        # glEnable(GL_LIGHT0)
+        glEnable(GL_LIGHT0)
         glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 180.0)
     else:
         glDisable(GL_LIGHT0)
@@ -212,7 +195,6 @@ def update_sun():
 def draw_floor():
     S = 100.0
     T = 10.0
-    glColor3f(1, 1, 1)
 
     glBegin(GL_QUADS)
     glNormal3f(0, 1, 0)
@@ -222,41 +204,18 @@ def draw_floor():
     glTexCoord2f(0.0,  T ); glVertex3f(-S, 0.0, -S)
     glEnd()
 
-def set_material_metal():
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.25, 0.25, 0.25, 1])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.4, 0.4, 0.4, 1])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.77, 0.77, 0.77, 1])
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 90.0)
-
-def set_material_plastic():
+def set_material_light_post():
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.1, 0.1, 0.1, 1.0])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.3, 0.3, 0.8, 1.0])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.2, 0.2, 0.2, 1.0])
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 20.0)
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.4, 0.4, 0.4, 1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.6, 0.6, 0.6, 1.0])
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50.0)
 
-def set_material_wood():
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.3, 0.2, 0.1, 1.0])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.6, 0.4, 0.2, 1.0])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 5.0)
-
-def set_material_rubber():
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.02, 0.02, 0.02, 1.0])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.01, 0.01, 0.01, 1.0])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.0, 0.0, 0.0, 1.0])
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 1.0)
-
-def set_material_glass():
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.1, 0.2, 0.25, 0.3])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.8, 0.9, 1.0, 1.0])
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 100.0)
-
-def set_material_floor():
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, [1.0, 1.0, 1.0, 1.0])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.2, 0.2, 0.2, 1.0])
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 10.0)
-
+def set_material_light_bulb(color=(1.0, 1.0, 0.8, 1.0)):
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.0, 0.0, 0.0, 1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  color)
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [1.0, 1.0, 1.0, 1.0])
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 80.0)
+    
 def display():
     global sun_angle, sun_color, sun_distance
 
@@ -269,10 +228,16 @@ def display():
               0.0, 1.0, 0.0) 
 
     update_sun()
-    update_post()
 
+    for x, z, lid in post_positions:
+        glPushMatrix()
+        glLoadIdentity()
+        glLightfv(lid, GL_POSITION, (x - 0.3, post_height - 0.2, z, 1.0))
+        glPopMatrix()
+
+    update_post()
+    
     # draw floor
-    set_material_floor()
     glEnable(GL_TEXTURE_2D)
     draw_floor()
     glDisable(GL_TEXTURE_2D)
@@ -281,17 +246,16 @@ def display():
     sun_angle += 0.1
     if sun_angle >= 360.0:
         sun_angle -= 360.0
-        
-    draw_post(x=15, z=15, height=post_height, light_id=GL_LIGHT1)
-    draw_post(x=-15, z=15, height=post_height, light_id=GL_LIGHT2)
-    draw_post(x=15, z=-15, height=post_height, light_id=GL_LIGHT3)
-    draw_post(x=-15, z=-15, height=post_height, light_id=GL_LIGHT4)
+    
+    draw_post(x=15, z=15, height=post_height, lid=GL_LIGHT1)
+    draw_post(x=-15, z=15, height=post_height, lid=GL_LIGHT2)
+    draw_post(x=15, z=-15, height=post_height, lid=GL_LIGHT3)
+    draw_post(x=-15, z=-15, height=post_height, lid=GL_LIGHT4)
 
     garagem.draw_garagem(0,0,0)
     my_car.update_car()
-    set_material_plastic()
     my_car.draw_car()
-
+    
     glutSwapBuffers()
 
 def reshape(w, h):

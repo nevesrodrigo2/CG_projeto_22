@@ -39,18 +39,18 @@ class Car:
 
     def draw_wheel(self, pos=(0,0,0), radius=0.7, width=0.4, angle=0.0, wheel_rotation=0.0):
         glPushMatrix()
+        self.set_material_rubber()
         glTranslatef(*pos)
         glRotatef(wheel_rotation, 0,1,0)
         glRotatef(angle, 0, 0, 1)
-        glColor3f(0.1, 0.1, 0.1)
         glutSolidTorus(width / 2.0, radius, 12, 24)
 
         # raios do pneu
+        self.set_material_tire_metal()
         for i in range(5):
             glPushMatrix()
             glRotatef(90, 0,1,0)
             glRotatef(i * 360 / 5, 1, 0, 0)
-            glColor3f(0.8, 0.8, 0.8)
             glTranslatef(0, 0, 0)
             glScalef(0.05, radius*2, 0.05)
             glutSolidCube(1.0)
@@ -113,19 +113,21 @@ class Car:
         glTranslatef(-length, 0, 0)
         glRotatef(angle, 0,1,0)
         glTranslatef(length/2, 0, 0)
-        glColor3f(*color)
         glScalef(length/2, height/2, thickness/2)
         glutSolidCube(2.0)
         glPopMatrix()
 
     def draw_steering_wheel(self, pos, radius=0.5, thickness=0.05, color=(0.1,0.1,0.1)):
+
+        # volante
         glPushMatrix()
+        self.set_material_rubber()
         glTranslatef(*pos)
         glRotatef(90, 0,1,0)
         glRotatef(self.steering_wheel_angle, 0,0,1)
-        glColor3f(*color)
         glutSolidTorus(thickness / 2.0, radius, 12, 24)
 
+        self.set_material_tire_metal()
         for i in range(3):
             glPushMatrix()
             glRotatef(i * 120, 0, 0, 1)
@@ -135,6 +137,7 @@ class Car:
             glPopMatrix()
         glPopMatrix()
 
+        # cilindro central
         glPushMatrix()
         glTranslatef(*pos)
         glRotatef(90, 0,1,0)
@@ -142,11 +145,31 @@ class Car:
         glutSolidCylinder(thickness / 2.0, radius*3,12,1)
         glPopMatrix()
 
+    def set_material_carpaint(self,color=(0.6, 0.1, 0.1)):
+        r, g, b = color
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [r*0.2, g*0.2, b*0.2, 1])
+        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [r, g, b, 1])
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.9, 0.9, 0.9, 1])
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 120.0)
+
+    def set_material_rubber(self):
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.02, 0.02, 0.02, 1.0])
+        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.05, 0.05, 0.05, 1.0])
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 5.0)
+
+    def set_material_tire_metal(self):
+        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.2, 0.2, 0.2, 1.0])
+        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.6, 0.6, 0.6, 1.0])
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.9, 0.9, 0.9, 1.0])
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 100.0)
+
     def draw_car(self, car_color=(0.596,0.729,0.835), car_size=(5.5,2.5,4.0)):
         length, height, width = car_size
 
+        
         glPushMatrix()
-        glColor3f(*car_color)
+        self.set_material_carpaint(color=car_color)
         glTranslatef(self.car_x, self.car_y + self.lift, self.car_z)
         glRotatef(self.car_direction, 0, 1, 0)
 
@@ -169,7 +192,6 @@ class Car:
         thickness = 0.05
         # base
         glPushMatrix()
-        glColor3f(*car_color)
         glTranslatef(0.0, -height / 2.0 + thickness / 2.0, 0.0)
         glScalef(length/2, thickness/2, width/2)
         glutSolidCube(2.0)
@@ -205,7 +227,6 @@ class Car:
         # front & rear end cubes
         for car_end in [-1, 1]:
             glPushMatrix()
-            glColor3f(*car_color)
             glTranslatef(length / 2 * car_end, 0.0, 0.0)
             glScalef(thickness / 2, height / 2, width / 2.0)
             glutSolidCube(2.0)
