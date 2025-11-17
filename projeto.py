@@ -342,14 +342,14 @@ def keyboard(key, x, y):
             var_globals.eye_y -= step
         elif key == b'p':
             dist = sqrt((var_globals.eye_x - var_globals.leye_x) ** 2 + (var_globals.eye_z - var_globals.leye_z) ** 2) - 5
-            tetha = atan2(var_globals.eye_z, var_globals.eye_x)
-            var_globals.eye_x = dist * cos(tetha)
-            var_globals.eye_z = dist * sin(tetha)
+            tetha = atan2(var_globals.eye_z - var_globals.leye_z, var_globals.eye_x - var_globals.leye_x)
+            var_globals.eye_x = var_globals.leye_x + dist * cos(tetha)
+            var_globals.eye_z = var_globals.leye_z + dist * sin(tetha)
         elif key == b'o':
             dist = sqrt((var_globals.eye_x - var_globals.leye_x) ** 2 + (var_globals.eye_z - var_globals.leye_z) ** 2) + 5
-            tetha = atan2(var_globals.eye_z, var_globals.eye_x)
-            var_globals.eye_x = dist * cos(tetha)
-            var_globals.eye_z = dist * sin(tetha)
+            tetha = atan2(var_globals.eye_z - var_globals.leye_z, var_globals.eye_x - var_globals.leye_x)
+            var_globals.eye_x = var_globals.leye_x + dist * cos(tetha)
+            var_globals.eye_z = var_globals.leye_z + dist * sin(tetha)
         elif key == b'i':
             var_globals.leye_y += 2
         elif key ==b'k':
