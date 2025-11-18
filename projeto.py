@@ -1,3 +1,4 @@
+# -------------------------------------------------------------------------------------------------------------------------- #
 import glfw
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -6,18 +7,20 @@ from PIL import Image
 import sys, os
 from math import *
 
+# importação local
 import var_globals
 from carro import Car
 from Garagem import Garagem
 
+# -------------------------------------------------------------------------------------------------------------------------- #
+# configurações globais
 win_w, win_h = 1280, 720
 tex_floor = None
 quadric = None
+
 # -------------------------------------------------------------------------------------------------------------------------- #
 # Postes
 post_height = 12.0
-post_length = 2.0
-post_color = (0.5, 0.5, 0.5, 1.0)
 
 post_positions = [
     (15.0, 15.0, GL_LIGHT1),
@@ -27,25 +30,32 @@ post_positions = [
 ]
 
 posts_on = True
-#------------------------------------------ #
+
+# -------------------------------------------------------------------------------------------------------------------------- #
 # Carro
 my_car = Car()
+
 # -------------------------------------------------------------------------------------------------------------------------- #
 # Sol
 sun_angle = 45.0     
 sun_distance = 100.0   
 sun_color = (1.0, 0.95, 0.8, 1.0)
+
 # -------------------------------------------------------------------------------------------------------------------------- #
 # garagem
 garagem = Garagem()
+
 # -------------------------------------------------------------------------------------------------------------------------- #
 # Texturas
-GRUNGE_PATH = "img/Texturelabs_Grunge_197M.jpg"
-GRASS_PATH = "img/relva.png"
 TILE_PATH = "img/mosaico.jpg"
+
 # -------------------------------------------------------------------------------------------------------------------------- #
 
 def load_texture(path, repeat=True):
+    """
+    Carrega uma textura a partir de um ficheiro e retorna o ID da textura OpenGL.
+    """
+
     if not os.path.isfile(path):
         print("Texture not found:", path); sys.exit(1)
 
@@ -67,6 +77,10 @@ def load_texture(path, repeat=True):
 
 
 def setup():
+    """
+    Configurações iniciais do OpenGL.
+    """
+
     global tex_floor
     glEnable(GL_DEPTH_TEST)
     
@@ -83,8 +97,28 @@ def setup():
 
     tex_floor = load_texture(TILE_PATH, repeat=True)
 
+def set_material_light_post():
+    """
+    Configura os materiais para o poste de luz.
+    """
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.1, 0.1, 0.1, 1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.4, 0.4, 0.4, 1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.6, 0.6, 0.6, 1.0])
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50.0)
+
+def set_material_light_bulb(color=(1.0, 1.0, 0.8, 1.0)):
+    """
+    Configura os materiais para a lâmpada do poste de luz.
+    """
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.0, 0.0, 0.0, 1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  color)
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [1.0, 1.0, 1.0, 1.0])
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 80.0)
 
 def draw_sphere(centro = (0,0,0),color = (0.85, 0.65, 0.35), raio = 1):
+    """
+    Desenha uma esfera usando GLU.
+    """
     global quadric
 
     glPushMatrix()
@@ -95,6 +129,10 @@ def draw_sphere(centro = (0,0,0),color = (0.85, 0.65, 0.35), raio = 1):
     glPopMatrix()
 
 def draw_circle(raio, centro = (0,0,0)):
+    """
+    Desenha um círculo usando GLU.
+    """
+
     global quadric
 
     glPushMatrix()
@@ -103,6 +141,10 @@ def draw_circle(raio, centro = (0,0,0)):
     glPopMatrix()
     
 def draw_cylinder(centro = (0,0,0), color = (0.85, 0.65, 0.35), base = 1.0,top = 1.0,height = 3):
+    """
+    Desenha um cilindro usando GLU.
+    """
+
     global quadric
     glPushMatrix()
     glColor3f(*color)
@@ -113,6 +155,10 @@ def draw_cylinder(centro = (0,0,0), color = (0.85, 0.65, 0.35), base = 1.0,top =
     glPopMatrix()
 
 def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1.0), lid=GL_LIGHT1):
+    """
+    Desenha um poste com uma lâmpada no topo.
+    """
+
     # cilindro do poste
     glPushMatrix()
     set_material_light_post()
@@ -142,6 +188,10 @@ def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1
     glPopMatrix()
     
 def update_post():
+    """
+    Atualiza o estado dos postes de luz (ligados/desligados).
+    """
+
     global posts_on
     if posts_on:
         for _, _, lid in post_positions:
@@ -151,6 +201,10 @@ def update_post():
             glDisable(lid)
 
 def draw_sun(angle_deg, distance=100.0, radius=3.0, color=(1.0,0.95,0.8,1.0)):
+    """
+    Desenha o sol na cena com base no ângulo, distância, raio e cor especificados.
+    """
+
     ang = radians(angle_deg)
     sx = distance * cos(ang)
     sy = distance * sin(ang)
@@ -166,6 +220,9 @@ def draw_sun(angle_deg, distance=100.0, radius=3.0, color=(1.0,0.95,0.8,1.0)):
     glPopMatrix()
 
 def update_sun():
+    """
+    Atualiza a posição e propriedades da luz do sol com base no ângulo, distância e cor atuais.
+    """
     global sun_angle, sun_distance, sun_color
 
     
@@ -193,6 +250,9 @@ def update_sun():
     glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 2.0) 
 
 def draw_floor():
+    """
+    Desenha o chão da cena.
+    """
     S = 100.0
     T = 10.0
 
@@ -204,19 +264,42 @@ def draw_floor():
     glTexCoord2f(0.0,  T ); glVertex3f(-S, 0.0, -S)
     glEnd()
 
-def set_material_light_post():
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.1, 0.1, 0.1, 1.0])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.4, 0.4, 0.4, 1.0])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.6, 0.6, 0.6, 1.0])
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50.0)
+def rotate_camera(angle):
+    """
+    Rotaciona a câmera em torno do ponto de olhar no plano XZ.
+    """
 
-def set_material_light_bulb(color=(1.0, 1.0, 0.8, 1.0)):
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.0, 0.0, 0.0, 1.0])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  color)
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [1.0, 1.0, 1.0, 1.0])
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 80.0)
-    
+    # vetor da câmera para o ponto de olhar
+    dx = var_globals.eye_x - var_globals.leye_x
+    dz = var_globals.eye_z - var_globals.leye_z
+    radius = sqrt(dx**2 + dz**2)
+
+    # ângulo atual
+    theta = atan2(dz, dx)
+    theta += angle  # rotaciona
+
+    # nova posição da câmera
+    var_globals.eye_x = var_globals.leye_x + radius * cos(theta)
+    var_globals.eye_z = var_globals.leye_z + radius * sin(theta)
+
+def move_camera_along_view(distance_delta):
+    """
+    Move a câmera ao longo da linha de visão para frente ou para trás.
+    """
+    # vetor da câmera para o ponto de olhar
+    dx = var_globals.eye_x - var_globals.leye_x
+    dz = var_globals.eye_z - var_globals.leye_z
+    radius = sqrt(dx**2 + dz**2) + distance_delta  # aplica delta
+
+    # angulo atual
+    theta = atan2(dz, dx)
+
+    # nova posição da câmera
+    var_globals.eye_x = var_globals.leye_x + radius * cos(theta)
+    var_globals.eye_z = var_globals.leye_z + radius * sin(theta)
+
 def display():
+
     global sun_angle, sun_color, sun_distance
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -227,32 +310,32 @@ def display():
               var_globals.leye_x, var_globals.leye_y, var_globals.leye_z,
               0.0, 1.0, 0.0) 
 
+    # update sol
     update_sun()
 
-    for x, z, lid in post_positions:
-        glPushMatrix()
-        glLoadIdentity()
-        glLightfv(lid, GL_POSITION, (x - 0.3, post_height - 0.2, z, 1.0))
-        glPopMatrix()
-
+    # update poste
     update_post()
     
-    # draw floor
+    # chao
     glEnable(GL_TEXTURE_2D)
     draw_floor()
     glDisable(GL_TEXTURE_2D)
 
+    # sol
     draw_sun(sun_angle, distance=sun_distance, radius=3.0, color=sun_color)
     sun_angle += 0.1
     if sun_angle >= 360.0:
         sun_angle -= 360.0
     
+    # postes de luz
     draw_post(x=15, z=15, height=post_height, lid=GL_LIGHT1)
     draw_post(x=-15, z=15, height=post_height, lid=GL_LIGHT2)
     draw_post(x=15, z=-15, height=post_height, lid=GL_LIGHT3)
     draw_post(x=-15, z=-15, height=post_height, lid=GL_LIGHT4)
 
+    # garagem
     garagem.draw_garagem(0,0,0)
+    # carro
     my_car.update_car()
     my_car.draw_car()
     
@@ -285,35 +368,24 @@ def keyboard(key, x, y):
 
     # se a camara estiver dentro do carro, não pode usar estas
     # keys
-    if not my_car.CameraDeCarro:
+    if not my_car.car_camera:
+        # movimentação da câmera ao redor de um ponto (centro)
+        # esquerda/direita
         if key == b'a':
-            subx = var_globals.eye_x - var_globals.leye_x
-            subz = var_globals.eye_z - var_globals.leye_z
-            r = sqrt(subx ** 2 + subz ** 2)
-            tetha = atan2(subz, subx) + step_angle
-            var_globals.eye_x = var_globals.leye_x + r * cos(tetha)
-            var_globals.eye_z = var_globals.leye_z + r * sin(tetha)
+            rotate_camera(step_angle)
         elif key == b'd':
-            subx = var_globals.eye_x - var_globals.leye_x
-            subz = var_globals.eye_z - var_globals.leye_z
-            r = sqrt(subx ** 2 + subz ** 2)
-            tetha = atan2(subz, subx) - step_angle
-            var_globals.eye_x = var_globals.leye_x + r * cos(tetha)
-            var_globals.eye_z = var_globals.leye_z + r * sin(tetha)
+            rotate_camera(-step_angle)
+        # cima/baixo
         elif key == b'w':
             var_globals.eye_y += step
         elif key == b's':
             var_globals.eye_y -= step
-        elif key == b'p':
-            dist = sqrt((var_globals.eye_x - var_globals.leye_x) ** 2 + (var_globals.eye_z - var_globals.leye_z) ** 2) - 5
-            tetha = atan2(var_globals.eye_z - var_globals.leye_z, var_globals.eye_x - var_globals.leye_x)
-            var_globals.eye_x = var_globals.leye_x + dist * cos(tetha)
-            var_globals.eye_z = var_globals.leye_z + dist * sin(tetha)
-        elif key == b'o':
-            dist = sqrt((var_globals.eye_x - var_globals.leye_x) ** 2 + (var_globals.eye_z - var_globals.leye_z) ** 2) + 5
-            tetha = atan2(var_globals.eye_z - var_globals.leye_z, var_globals.eye_x - var_globals.leye_x)
-            var_globals.eye_x = var_globals.leye_x + dist * cos(tetha)
-            var_globals.eye_z = var_globals.leye_z + dist * sin(tetha)
+        # aproximar/afastar
+        elif key == b'p':   
+            move_camera_along_view(-5)
+        elif key == b'o':   
+            move_camera_along_view(+5)
+        # rotaçao da camara
         elif key == b'i':
             var_globals.leye_y += 2
         elif key ==b'k':

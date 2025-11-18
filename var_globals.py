@@ -12,8 +12,5 @@ Variáveis típicas incluídas:
 - leye_x, leye_y, leye_z
 """
 
-# eye_x, eye_y, eye_z = 0.0, 5.0, 14.0
-# leye_x, leye_y, leye_z = 0.0, 5.0, 0.0
-
 eye_x, eye_y, eye_z = 0.1, 5, -30.0
 leye_x, leye_y, leye_z = 0.0, 5, 0.0
