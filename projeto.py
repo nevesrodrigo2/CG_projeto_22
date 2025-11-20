@@ -18,18 +18,11 @@ window = None
 win_w, win_h = 1280, 720
 tex_floor = None
 quadric = None
+keys_down = set()
 
 # -------------------------------------------------------------------------------------------------------------------------- #
 # Postes
 post_height = 12.0
-
-post_positions = [
-    (15.0, 15.0, GL_LIGHT1),
-    (-15.0, 15.0, GL_LIGHT2),
-    (15.0, -15.0, GL_LIGHT3),
-    (-15.0, -15.0, GL_LIGHT4),
-]
-
 posts_on = True
 
 # -------------------------------------------------------------------------------------------------------------------------- #
@@ -167,7 +160,10 @@ def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1
     set_material_light_post()
     glTranslatef(x, 0.0, z)
     glRotatef(-90, 1, 0, 0)
-    glutSolidCylinder(radius, height, 16, 16)
+    quadric = gluNewQuadric()
+    gluQuadricNormals(quadric, GLU_SMOOTH)
+    gluCylinder(quadric, radius, radius, height, 16, 16)
+    gluDeleteQuadric(quadric)
     glPopMatrix()
 
     #fazer as luzes
@@ -186,9 +182,7 @@ def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1
         glLightf(lid, GL_SPOT_EXPONENT, LIGHT_EXPONENT)
         glLightf(lid, GL_SPOT_CUTOFF,   LIGHT_CUTOFF)
         glPopMatrix()
-        print("ligada")
     else:
-        print("desligada")
         glDisable(lid)
     
 
@@ -317,9 +311,6 @@ def display():
 
     # update sol
     update_sun()
-
-    # update poste
-    #update_post()
     
     # chao
     glEnable(GL_TEXTURE_2D)
@@ -362,13 +353,28 @@ def specialKeyboard(key, x, y):
     elif key == GLUT_KEY_RIGHT:
         my_car.drive("right")
 
-keys_down = set()
 
 def glfw_keyboard_callback(window, key, scancode, action, mods):
     
-    global keys_down
+    global keys_down, my_car, garagem
     if action == glfw.PRESS:
         keys_down.add(key)
+
+        if glfw.KEY_R in keys_down:    # postes de luz
+            global posts_on
+            posts_on = not posts_on
+        
+        if glfw.KEY_U in keys_down:
+            my_car.change_car_camera_mode()
+
+        if glfw.KEY_M in keys_down:
+            garagem.last_time_garage = glfw.get_time()    #pega o tempo que começou o
+            garagem.Abrir = not garagem.Abrir
+        if glfw.KEY_H in keys_down:
+            my_car.toggle_door("right")
+        if glfw.KEY_G in keys_down:
+            my_car.toggle_door("left")
+
     elif action == glfw.RELEASE:
         keys_down.discard(key)
     if key == glfw.KEY_ESCAPE and action == glfw.PRESS:
@@ -429,21 +435,7 @@ def keys_handler():
             perpX = -vetorZ / length
             perpZ =  vetorX / length
             var_globals.leye_x += perpX 
-            var_globals.leye_z += perpZ
-    
-    # funciona sempre
-    if glfw.KEY_M in keys_down:
-        garagem.last_time_garage = glfw.get_time()    #pega o tempo que começou o
-        garagem.Abrir = not garagem.Abrir
-    elif glfw.KEY_H in keys_down:
-        my_car.toggle_door("right")
-    elif glfw.KEY_G in keys_down:
-        my_car.toggle_door("left")
-    elif glfw.KEY_U in keys_down:
-        my_car.change_car_camera_mode()
-    elif glfw.KEY_R in keys_down:    # postes de luz
-        global posts_on
-        posts_on = not posts_on
+            var_globals.leye_z += perpZ    
 
 def main():
     global window 
