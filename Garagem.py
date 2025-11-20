@@ -7,6 +7,7 @@ import sys, os
 from math import *
 from math import sqrt,cos,sin,atan2
 
+from utils import draw_cube
 
 class Garagem:
     ANGLE_GARAGE = 0
@@ -80,6 +81,7 @@ class Garagem:
         self.set_material_base_porta_garagem() # usa uma cor escura para para o portão
         glPopMatrix()
     
+
     def draw_wall_garagem(self,x,y,z,angle_rotation = 0, qntVigas=10,comprimento=10,altura=7, largura =0.2, comprimento_viga = 0.1, cor_viga =(0.7,0.7,0.7)):
         glPushMatrix()
         glNormal3f(0.0, 1.0, 0.0) 
@@ -111,7 +113,8 @@ class Garagem:
             glTranslatef(i * dist_vigas / largura_relacao, 0,0)
             glNormal3f(0.0, 1.0, 0.0) 
             glRotatef(90,0,1,0)
-            glutSolidCube(altura)
+
+            draw_cube(altura)
             glPopMatrix()
 
         glPopMatrix()

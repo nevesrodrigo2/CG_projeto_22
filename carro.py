@@ -5,6 +5,7 @@ from OpenGL.GLUT import *
 from math import *
 
 import var_globals
+from utils import draw_cube, draw_torus
 
 class Car:
     """
@@ -77,7 +78,8 @@ class Car:
         glTranslatef(*pos)
         glRotatef(wheel_rotation, 0,1,0)
         glRotatef(angle, 0, 0, 1)
-        glutSolidTorus(width / 2.0, radius, 12, 24)
+        
+        draw_torus(width / 2.0, radius, 12, 24)
 
         # jantes do pneu
         self.set_material_tire_metal()
@@ -87,7 +89,7 @@ class Car:
             glRotatef(i * 360 / 5, 1, 0, 0)
             glTranslatef(0, 0, 0)
             glScalef(0.05, radius*2, 0.05)
-            glutSolidCube(1.0)
+            draw_cube(1.0)
             glPopMatrix()
         glPopMatrix()
 
@@ -179,7 +181,7 @@ class Car:
         glRotatef(angle, 0,1,0)
         glTranslatef(length/2, 0, 0)
         glScalef(length/2, height/2, thickness/2)
-        glutSolidCube(2.0)
+        draw_cube(2.0)
         glPopMatrix()
 
     def draw_steering_wheel(self, pos, radius=0.5, thickness=0.05):
@@ -193,7 +195,8 @@ class Car:
         glTranslatef(*pos)
         glRotatef(90, 0,1,0)
         glRotatef(self.steering_wheel_angle, 0,0,1)
-        glutSolidTorus(thickness / 2.0, radius, 12, 24)
+        
+        draw_torus(thickness / 2.0, radius, 12, 24)
 
         # raios do volante
         self.set_material_tire_metal()
@@ -202,7 +205,7 @@ class Car:
             glRotatef(i * 120, 0, 0, 1)
             glTranslatef(radius / 2.0, 0, 0)
             glScalef(radius, thickness / 2.0, thickness / 2.0)
-            glutSolidCube(1.0)
+            draw_cube(1.0)
             glPopMatrix()
         glPopMatrix()
 
@@ -211,7 +214,11 @@ class Car:
         glTranslatef(*pos)
         glRotatef(90, 0,1,0)
         glRotatef(90,1,0,0)
-        glutSolidCylinder(thickness / 2.0, radius*3,12,1)
+        quadric = gluNewQuadric()
+        gluQuadricNormals(quadric, GLU_SMOOTH)
+        gluCylinder(quadric, thickness / 2.0, thickness / 2.0, radius*3,12,1)
+        gluDeleteQuadric(quadric)
+        
         glPopMatrix()
 
 
@@ -232,7 +239,7 @@ class Car:
         glPushMatrix()
         glTranslatef(length/2 + back_length, 0, 0)
         glScalef(back_length, height/2, width/2)
-        glutSolidCube(2.0)
+        draw_cube(2.0)
         glPopMatrix()
 
         # frente
@@ -240,14 +247,14 @@ class Car:
         glPushMatrix()
         glTranslatef(-length + front_length, 0, 0)
         glScalef(front_length, height/2, width/2)
-        glutSolidCube(2.0)
+        draw_cube(2.0)
         glPopMatrix()
 
         # centro
         glPushMatrix()
         glTranslatef(0.0, -height / 2.0 + self.thickness / 2.0, 0.0)
         glScalef(length/2, self.thickness/2, width/2)
-        glutSolidCube(2.0)
+        draw_cube(2.0)
         glPopMatrix()
 
         door_side_length = 0.6
@@ -257,13 +264,13 @@ class Car:
         glPushMatrix()
         glTranslatef(length * (door_side_length / 2.0), 0.0, width / 2.0 - self.thickness / 2.0)
         glScalef(length * fixed_length_car_side / 2.0, height / 2.0, self.thickness / 2.0)
-        glutSolidCube(2.0)
+        draw_cube(2.0)
         glPopMatrix()
 
         glPushMatrix()
         glTranslatef(length * (door_side_length / 2.0), 0.0, -width / 2.0 - self.thickness / 2.0)
         glScalef(length * fixed_length_car_side / 2.0, height / 2.0, self.thickness / 2.0)
-        glutSolidCube(2.0)
+        draw_cube(2.0)
         glPopMatrix()
 
         # doors
@@ -285,7 +292,7 @@ class Car:
             glPushMatrix()
             glTranslatef(length / 2 * car_end, 0.0, 0.0)
             glScalef(self.thickness / 2, height / 2, width / 2.0)
-            glutSolidCube(2.0)
+            draw_cube(2.0)
             glPopMatrix()
 
         # rodas
