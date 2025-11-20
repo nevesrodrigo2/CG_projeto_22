@@ -38,7 +38,7 @@ my_car = Car()
 
 # -------------------------------------------------------------------------------------------------------------------------- #
 # Sol
-sun_angle = 45.0     
+sun_angle = 170.0     
 sun_distance = 100.0   
 sun_color = (1.0, 0.95, 0.8, 1.0)
 
@@ -90,10 +90,17 @@ def init_gl(win_w, win_h):
     glEnable(GL_LIGHTING)
     glEnable(GL_LIGHT0)
 
+    
+
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, (0.85, 0.85, 0.95, 1.0))
+    glMaterialf (GL_FRONT_AND_BACK, GL_SHININESS, 64.0)
+
+
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
     glEnable(GL_TEXTURE_2D)
-
+    
     glShadeModel(GL_SMOOTH)
     glEnable(GL_NORMALIZE)
     glClearColor(0.75, 0.75, 1.0, 1.0)
@@ -130,6 +137,8 @@ def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1
     """
     Desenha um poste com uma lâmpada no topo.
     """
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.2, 0.2, 0.2, 1.0])
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 10.0)
 
     # cilindro do poste
     glPushMatrix()
@@ -152,29 +161,36 @@ def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1
     gluSphere(quadric, 0.6, 16, 16)
     gluDeleteQuadric(quadric)
     glPopMatrix()
-
-    glPushMatrix()
-    glEnable(lid)
-    glLightfv(lid, GL_POSITION, (x - 0.3, lamp_height, z, 1.0))
-    glLightfv(lid, GL_SPOT_DIRECTION, (0.0, -1.0, 0.0))
-    glLightfv(lid, GL_DIFFUSE, lamp_color)
-    glLightfv(lid, GL_SPECULAR, lamp_color)
-    glLightfv(lid, GL_AMBIENT, [0.0*c for c in lamp_color])
-    glLightf(lid, GL_SPOT_CUTOFF, 90.0)  
-    glPopMatrix()
     
-def update_post():
-    """
-    Atualiza o estado dos postes de luz (ligados/desligados).
-    """
+    # cilindro do poste
+    glPushMatrix()
+    set_material_light_post()
+    glTranslatef(x, 0.0, z)
+    glRotatef(-90, 1, 0, 0)
+    glutSolidCylinder(radius, height, 16, 16)
+    glPopMatrix()
 
+    #fazer as luzes
     global posts_on
     if posts_on:
-        for _, _, lid in post_positions:
-            glEnable(lid)
+        glPushMatrix()
+        glEnable(lid) # ativo as luzes
+        #defino elas
+        LIGHT_CUTOFF   =  80.0     # meio larguinho
+        LIGHT_EXPONENT = 1
+        glLightfv(lid, GL_AMBIENT,  (0.08, 0.08, 0.09, 1.0))
+        glLightfv(lid, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0)) # alterado apra cor difuisa 100% vermelha
+        glLightfv(lid, GL_SPECULAR, (1.00, 1.00, 1.00, 1.0))
+        glLightfv(lid, GL_POSITION, (x - 0.3, height, z, 1.0))
+        glLightfv(lid, GL_SPOT_DIRECTION, (0.0, -1.0, 0.0))
+        glLightf(lid, GL_SPOT_EXPONENT, LIGHT_EXPONENT)
+        glLightf(lid, GL_SPOT_CUTOFF,   LIGHT_CUTOFF)
+        glPopMatrix()
+        print("ligada")
     else:
-        for _, _, lid in post_positions:
-            glDisable(lid)
+        print("desligada")
+        glDisable(lid)
+    
 
 def draw_sun(angle_deg, distance=100.0, radius=3.0, color=(1.0,0.95,0.8,1.0)):
     """
@@ -229,19 +245,29 @@ def update_sun():
     glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 2.0) 
 
 def draw_floor():
-    """
-    Desenha o chão da cena.
-    """
     S = 100.0
     T = 10.0
 
+    glPushAttrib(GL_ALL_ATTRIB_BITS)
+
+    glEnable(GL_TEXTURE_2D)
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+
+    # ATIVAR color material APENAS PARA O CHÃO
+    glEnable(GL_COLOR_MATERIAL)
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
+    glColor3f(1.0, 1.0, 1.0)
+
     glBegin(GL_QUADS)
     glNormal3f(0, 1, 0)
-    glTexCoord2f(0.0, 0.0); glVertex3f(-S, 0.0,  S)
-    glTexCoord2f(T,   0.0); glVertex3f( S, 0.0,  S)
-    glTexCoord2f(T,    T ); glVertex3f( S, 0.0, -S)
-    glTexCoord2f(0.0,  T ); glVertex3f(-S, 0.0, -S)
+    glTexCoord2f(0, 0); glVertex3f(-S, 0,  S)
+    glTexCoord2f(T, 0); glVertex3f( S, 0,  S)
+    glTexCoord2f(T, T); glVertex3f( S, 0, -S)
+    glTexCoord2f(0, T); glVertex3f(-S, 0, -S)
     glEnd()
+
+    glPopAttrib()   # <- VOLTA TUDO AO NORMAL (materiais incluídos!)
+
 
 def rotate_camera(angle):
     """
@@ -293,7 +319,7 @@ def display():
     update_sun()
 
     # update poste
-    update_post()
+    #update_post()
     
     # chao
     glEnable(GL_TEXTURE_2D)
