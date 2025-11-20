@@ -115,44 +115,6 @@ def set_material_light_bulb(color=(1.0, 1.0, 0.8, 1.0)):
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [1.0, 1.0, 1.0, 1.0])
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 80.0)
 
-def draw_sphere(centro = (0,0,0),color = (0.85, 0.65, 0.35), raio = 1):
-    """
-    Desenha uma esfera usando GLU.
-    """
-    global quadric
-
-    glPushMatrix()
-    glTranslatef(*centro)
-    glColor3f(*color)
-    #glRotatef(90, 1, 0, 0)      # rodar 90° em X
-    gluSphere(quadric, raio, 48, 32)
-    glPopMatrix()
-
-def draw_circle(raio, centro = (0,0,0)):
-    """
-    Desenha um círculo usando GLU.
-    """
-
-    global quadric
-
-    glPushMatrix()
-    glTranslatef(*centro)
-    gluDisk(quadric,0.0,raio,50,1)
-    glPopMatrix()
-    
-def draw_cylinder(centro = (0,0,0), color = (0.85, 0.65, 0.35), base = 1.0,top = 1.0,height = 3):
-    """
-    Desenha um cilindro usando GLU.
-    """
-
-    global quadric
-    glPushMatrix()
-    glColor3f(*color)
-    glTranslatef(*centro)
-    draw_circle(base)
-    draw_circle(top,(0,0,+height))
-    gluCylinder(quadric, base, top, height, 48, 32)
-    glPopMatrix()
 
 def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1.0), lid=GL_LIGHT1):
     """
@@ -178,13 +140,11 @@ def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1
     glPushMatrix()
     glEnable(lid)
     glLightfv(lid, GL_POSITION, (x - 0.3, lamp_height, z, 1.0))
+    glLightfv(lid, GL_SPOT_DIRECTION, (0.0, -1.0, 0.0))
     glLightfv(lid, GL_DIFFUSE, lamp_color)
     glLightfv(lid, GL_SPECULAR, lamp_color)
-    glLightfv(lid, GL_AMBIENT, [0.1*c for c in lamp_color])
-    glLightf(lid, GL_CONSTANT_ATTENUATION, 0.5)
-    glLightf(lid, GL_LINEAR_ATTENUATION, 0.01)
-    glLightf(lid, GL_QUADRATIC_ATTENUATION, 0.001)
-    glLightf(lid, GL_SPOT_CUTOFF, 90.0)  # omnidirectional
+    glLightfv(lid, GL_AMBIENT, [0.0*c for c in lamp_color])
+    glLightf(lid, GL_SPOT_CUTOFF, 90.0)  
     glPopMatrix()
     
 def update_post():
