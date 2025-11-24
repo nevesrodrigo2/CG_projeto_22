@@ -9,8 +9,8 @@ from math import *
 
 # importação local
 import var_globals
-from carro import Car
-from Garagem import Garagem
+from car import Car
+from garage import Garage
 
 # -------------------------------------------------------------------------------------------------------------------------- #
 # configurações globais
@@ -21,6 +21,12 @@ quadric = None
 keys_down = set()
 
 # -------------------------------------------------------------------------------------------------------------------------- #
+# Camera
+step = 0.2
+step_angle = 0.1
+
+# -------------------------------------------------------------------------------------------------------------------------- #
+
 # Postes
 post_height = 12.0
 posts_on = True
@@ -37,7 +43,7 @@ sun_color = (1.0, 0.95, 0.8, 1.0)
 
 # -------------------------------------------------------------------------------------------------------------------------- #
 # garagem
-garagem = Garagem()
+garagem = Garage()
 
 # -------------------------------------------------------------------------------------------------------------------------- #
 # Texturas
@@ -319,7 +325,7 @@ def display():
 
     # sol
     draw_sun(sun_angle, distance=sun_distance, radius=3.0, color=sun_color)
-    sun_angle += 0.1
+    sun_angle += 0.01
     if sun_angle >= 360.0:
         sun_angle -= 360.0
     
@@ -343,36 +349,28 @@ def glfw_resize(window, w, h):
     glLoadIdentity()
     gluPerspective(60.0, float(w)/float(h), 0.1, 1000.0)
 
-def specialKeyboard(key, x, y):
-    if key == GLUT_KEY_UP:
-        my_car.drive("forward")
-    elif key == GLUT_KEY_DOWN:
-        my_car.drive("backward")
-    elif key == GLUT_KEY_LEFT:
-        my_car.drive("left")
-    elif key == GLUT_KEY_RIGHT:
-        my_car.drive("right")
-
-
 def glfw_keyboard_callback(window, key, scancode, action, mods):
     
     global keys_down, my_car, garagem
+    
     if action == glfw.PRESS:
         keys_down.add(key)
 
-        if glfw.KEY_R in keys_down:    # postes de luz
+        if key == glfw.KEY_R:
             global posts_on
             posts_on = not posts_on
         
-        if glfw.KEY_U in keys_down:
+        if key == glfw.KEY_U:
             my_car.change_car_camera_mode()
 
-        if glfw.KEY_M in keys_down:
-            garagem.last_time_garage = glfw.get_time()    #pega o tempo que começou o
+        if key == glfw.KEY_M:
+            garagem.last_time_garage = glfw.get_time()
             garagem.Abrir = not garagem.Abrir
-        if glfw.KEY_H in keys_down:
+            
+        if key == glfw.KEY_H:
             my_car.toggle_door("right")
-        if glfw.KEY_G in keys_down:
+            
+        if key == glfw.KEY_G:
             my_car.toggle_door("left")
 
     elif action == glfw.RELEASE:
@@ -382,8 +380,10 @@ def glfw_keyboard_callback(window, key, scancode, action, mods):
 
 def keys_handler():
     global keys_down
-    global garagem, my_car
+    global garagem, my_car, step, step_angle
+    global step
 
+    # Carro
     if glfw.KEY_UP in keys_down:
         my_car.drive("forward")
     if glfw.KEY_DOWN in keys_down:
@@ -392,50 +392,52 @@ def keys_handler():
         my_car.drive("left")
     if glfw.KEY_RIGHT in keys_down:
         my_car.drive("right")
-     
-    step = 0.2
-    step_angle = 0.1
 
-    # se a camara estiver dentro do carro, não pode usar estas
-    # keys
+    # Camera (se a camara nao estiver no interior do carro)
     if not my_car.car_camera:
-        # movimentação da câmera ao redor de um ponto (centro)
-        # esquerda/direita
+        # zoom in/out
+        if glfw.KEY_P in keys_down:
+            move_camera_along_view(-step)
+        if glfw.KEY_O in keys_down:
+            move_camera_along_view(step)
+        
+        # rotate à volta de um ponto
         if glfw.KEY_A in keys_down:
             rotate_camera(step_angle)
-        elif glfw.KEY_D in keys_down:
+        if glfw.KEY_D in keys_down:
             rotate_camera(-step_angle)
-        # cima/baixo
-        elif glfw.KEY_W in keys_down:
+        
+        # Mover camara up/down
+        if glfw.KEY_W in keys_down:
             var_globals.eye_y += step
-        elif glfw.KEY_S in keys_down:
+        if glfw.KEY_S in keys_down:
             var_globals.eye_y -= step
-        # aproximar/afastar
-        elif glfw.KEY_P in keys_down:   
-            move_camera_along_view(-5)
-        elif glfw.KEY_O in keys_down:   
-            move_camera_along_view(+5)
-        # rotaçao da camara
-        elif glfw.KEY_I in keys_down:
-            var_globals.leye_y += 2
-        elif glfw.KEY_K in keys_down:
-            var_globals.leye_y -= 2
-        elif glfw.KEY_J in keys_down:
+        
+        # rotacao central à camara
+        if glfw.KEY_I in keys_down:
+            var_globals.leye_y += step
+        if glfw.KEY_K in keys_down:
+            var_globals.leye_y -= step
+            
+        if glfw.KEY_J in keys_down:
             vetorX = var_globals.leye_x - var_globals.eye_x
             vetorZ = var_globals.leye_z - var_globals.eye_z
             length = sqrt(vetorX**2 + vetorZ**2)
-            perpX = -vetorZ / length
-            perpZ =  vetorX / length
-            var_globals.leye_x += -perpX
-            var_globals.leye_z += -perpZ
-        elif glfw.KEY_L in keys_down:
+            if length > 0:
+                perpX = -vetorZ / length
+                perpZ = vetorX / length
+                var_globals.leye_x += -perpX * step
+                var_globals.leye_z += -perpZ * step
+
+        if glfw.KEY_L in keys_down:
             vetorX = var_globals.leye_x - var_globals.eye_x
             vetorZ = var_globals.leye_z - var_globals.eye_z
             length = sqrt(vetorX**2 + vetorZ**2)
-            perpX = -vetorZ / length
-            perpZ =  vetorX / length
-            var_globals.leye_x += perpX 
-            var_globals.leye_z += perpZ    
+            if length > 0:
+                perpX = -vetorZ / length
+                perpZ = vetorX / length
+                var_globals.leye_x += perpX * step
+                var_globals.leye_z += perpZ * step 
 
 def main():
     global window 

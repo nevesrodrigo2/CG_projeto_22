@@ -3,13 +3,11 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 from PIL import Image
-import sys, os
 from math import *
-from math import sqrt,cos,sin,atan2
 
 from utils import draw_cube
 
-class Garagem:
+class Garage:
     ANGLE_GARAGE = 0
     Abrir = False
     last_time_garage = 0
