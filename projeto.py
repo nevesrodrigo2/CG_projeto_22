@@ -89,8 +89,6 @@ def init_gl(win_w, win_h):
     glEnable(GL_LIGHTING)
     glEnable(GL_LIGHT0)
 
-    
-
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, (0.85, 0.85, 0.95, 1.0))
     glMaterialf (GL_FRONT_AND_BACK, GL_SHININESS, 64.0)
@@ -132,14 +130,11 @@ def set_material_light_bulb(color=(1.0, 1.0, 0.8, 1.0)):
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 80.0)
 
 
-def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1.0), lid=GL_LIGHT1):
+def draw_post(x=0.0, z=0.0, height=12.0, radius=0.2, lamp_color=(1.0, 1.0, 0.8, 1.0), lid=GL_LIGHT1):
     """
-    Desenha um poste com uma lâmpada no topo.
+    Desenha um poste com uma lâmpada no topo e configura a iluminação correspondente.
     """
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.2, 0.2, 0.2, 1.0])
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 10.0)
-
-    # cilindro do poste
+    # Cilindro do poste
     glPushMatrix()
     set_material_light_post()
     glTranslatef(x, 0.0, z)
@@ -150,44 +145,36 @@ def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1
     gluDeleteQuadric(quadric)
     glPopMatrix()
 
-    # esfera da lampada
+    # Esfera da lâmpada
     lamp_height = height - 0.2
     glPushMatrix()
     set_material_light_bulb(lamp_color)
-    glTranslatef(x - 0.3, lamp_height, z)
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, (lamp_color[0], lamp_color[1], lamp_color[2], 1.0))
+    glTranslatef(x, lamp_height, z)
     quadric = gluNewQuadric()
     gluQuadricNormals(quadric, GLU_SMOOTH)
-    gluSphere(quadric, 0.6, 16, 16)
+    gluSphere(quadric, 0.5, 16, 16)
     gluDeleteQuadric(quadric)
-    glPopMatrix()
-    
-    # cilindro do poste
-    glPushMatrix()
-    set_material_light_post()
-    glTranslatef(x, 0.0, z)
-    glRotatef(-90, 1, 0, 0)
-    quadric = gluNewQuadric()
-    gluQuadricNormals(quadric, GLU_SMOOTH)
-    gluCylinder(quadric, radius, radius, height, 16, 16)
-    gluDeleteQuadric(quadric)
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, (0.0, 0.0, 0.0, 1.0))
     glPopMatrix()
 
-    #fazer as luzes
+    # Configuração da luz
     global posts_on
     if posts_on:
-        glPushMatrix()
-        glEnable(lid) # ativo as luzes
-        #defino elas
-        LIGHT_CUTOFF   =  80.0     # meio larguinho
-        LIGHT_EXPONENT = 1
-        glLightfv(lid, GL_AMBIENT,  (0.08, 0.08, 0.09, 1.0))
-        glLightfv(lid, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0)) # alterado apra cor difuisa 100% vermelha
-        glLightfv(lid, GL_SPECULAR, (1.00, 1.00, 1.00, 1.0))
-        glLightfv(lid, GL_POSITION, (x - 0.3, height, z, 1.0))
+        glEnable(lid)
+
+        glLightfv(lid, GL_POSITION, (x, lamp_height, z, 1.0))
         glLightfv(lid, GL_SPOT_DIRECTION, (0.0, -1.0, 0.0))
-        glLightf(lid, GL_SPOT_EXPONENT, LIGHT_EXPONENT)
-        glLightf(lid, GL_SPOT_CUTOFF,   LIGHT_CUTOFF)
-        glPopMatrix()
+        glLightf(lid, GL_SPOT_CUTOFF, 180.0)  
+        glLightf(lid, GL_SPOT_EXPONENT, 5.0)
+
+        glLightfv(lid, GL_AMBIENT, (0.2, 0.2, 0.2, 1.0))
+        glLightfv(lid, GL_DIFFUSE, (lamp_color[0] * 2.0, lamp_color[1] * 2.0, lamp_color[2] * 2.0, 1.0))  
+        glLightfv(lid, GL_SPECULAR, (lamp_color[0] * 1.5, lamp_color[1] * 1.5, lamp_color[2] * 1.5, 1.0)) 
+
+        glLightf(lid, GL_CONSTANT_ATTENUATION, 0.5)
+        glLightf(lid, GL_LINEAR_ATTENUATION, 0.02)
+        glLightf(lid, GL_QUADRATIC_ATTENUATION, 0.005)
     else:
         glDisable(lid)
     
@@ -220,14 +207,13 @@ def update_sun():
     """
     global sun_angle, sun_distance, sun_color
 
-    
     ang = radians(sun_angle)
     sun_x = sun_distance * cos(ang)
     sun_y = sun_distance * sin(ang)
     sun_z = 0.0
-
+    
     intensity = 2
-    sun_position = [sun_x, sun_y, sun_z, 1.0]  # posicao da luz
+    sun_position = [sun_x, sun_y, sun_z, 0]  # posicao da luz
     sun_diffuse = [sun_color[0] * intensity, sun_color[1] * intensity, sun_color[2] * intensity , 1.0]
     sun_specular = [sun_color[0] * intensity, sun_color[1] * intensity, sun_color[2] * intensity, 1.0]
 
@@ -236,7 +222,6 @@ def update_sun():
     glLightfv(GL_LIGHT0, GL_SPECULAR, sun_specular)
 
     # ajustar de acordo com a altura Y do sol
-    glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, [0.0, -1.0, 0.0])
     if sun_y > 0:
         glEnable(GL_LIGHT0)
         glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 180.0)
