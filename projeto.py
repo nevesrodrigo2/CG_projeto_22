@@ -177,7 +177,7 @@ def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1
         glEnable(lid) # ativo as luzes
         #defino elas
         LIGHT_CUTOFF   =  85.0     # meio larguinho
-        LIGHT_EXPONENT = 1.0
+        LIGHT_EXPONENT = 0.0
         glLightfv(lid, GL_AMBIENT,  (0.08, 0.08, 0.09, 1.0))
         glLightfv(lid, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0)) # alterado apra cor difuisa 100% vermelha
         glLightfv(lid, GL_SPECULAR, (1.00, 1.00, 1.00, 1.0))

@@ -136,12 +136,12 @@ class Garage:
         self.draw_wall_garagem(x+comprimento_porta/2,y,
                         z+comprimento_parede/2, 
                         angle_rotation=90,
-                        qntVigas=11,
+                        qntVigas=20,
                         comprimento_viga=0.10,
                         comprimento=comprimento_parede)
         
         self.draw_wall_garagem(x+-comprimento_porta/2,y,z+comprimento_parede/2,
-                        angle_rotation=90,qntVigas=11, comprimento_viga=-0.1
+                        angle_rotation=90,qntVigas=20, comprimento_viga=-0.1
                         ,comprimento=comprimento_parede)
 
         self.draw_wall_garagem(x,y+altura_porta,z,angle_rotation= 0,comprimento=7.5,altura = 2,comprimento_viga=-0.1)
