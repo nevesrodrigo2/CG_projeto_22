@@ -130,11 +130,14 @@ def set_material_light_bulb(color=(1.0, 1.0, 0.8, 1.0)):
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 80.0)
 
 
-def draw_post(x=0.0, z=0.0, height=12.0, radius=0.2, lamp_color=(1.0, 1.0, 0.8, 1.0), lid=GL_LIGHT1):
+def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1.0), lid=GL_LIGHT1):
     """
-    Desenha um poste com uma lâmpada no topo e configura a iluminação correspondente.
+    Desenha um poste com uma lâmpada no topo.
     """
-    # Cilindro do poste
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.2, 0.2, 0.2, 1.0])
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 10.0)
+
+    # cilindro do poste
     glPushMatrix()
     set_material_light_post()
     glTranslatef(x, 0.0, z)
@@ -145,36 +148,44 @@ def draw_post(x=0.0, z=0.0, height=12.0, radius=0.2, lamp_color=(1.0, 1.0, 0.8, 
     gluDeleteQuadric(quadric)
     glPopMatrix()
 
-    # Esfera da lâmpada
+    # esfera da lampada
     lamp_height = height - 0.2
     glPushMatrix()
     set_material_light_bulb(lamp_color)
-    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, (lamp_color[0], lamp_color[1], lamp_color[2], 1.0))
-    glTranslatef(x, lamp_height, z)
+    glTranslatef(x - 0.3, lamp_height, z)
     quadric = gluNewQuadric()
     gluQuadricNormals(quadric, GLU_SMOOTH)
-    gluSphere(quadric, 0.5, 16, 16)
+    gluSphere(quadric, 0.6, 16, 16)
     gluDeleteQuadric(quadric)
-    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, (0.0, 0.0, 0.0, 1.0))
+    glPopMatrix()
+    
+    # cilindro do poste
+    glPushMatrix()
+    set_material_light_post()
+    glTranslatef(x, 0.0, z)
+    glRotatef(-90, 1, 0, 0)
+    quadric = gluNewQuadric()
+    gluQuadricNormals(quadric, GLU_SMOOTH)
+    gluCylinder(quadric, radius, radius, height, 16, 16)
+    gluDeleteQuadric(quadric)
     glPopMatrix()
 
-    # Configuração da luz
+    #fazer as luzes
     global posts_on
     if posts_on:
-        glEnable(lid)
-
-        glLightfv(lid, GL_POSITION, (x, lamp_height, z, 1.0))
+        glPushMatrix()
+        glEnable(lid) # ativo as luzes
+        #defino elas
+        LIGHT_CUTOFF   =  85.0     # meio larguinho
+        LIGHT_EXPONENT = 1.0
+        glLightfv(lid, GL_AMBIENT,  (0.08, 0.08, 0.09, 1.0))
+        glLightfv(lid, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0)) # alterado apra cor difuisa 100% vermelha
+        glLightfv(lid, GL_SPECULAR, (1.00, 1.00, 1.00, 1.0))
+        glLightfv(lid, GL_POSITION, (x - 0.3, height, z, 1.0))
         glLightfv(lid, GL_SPOT_DIRECTION, (0.0, -1.0, 0.0))
-        glLightf(lid, GL_SPOT_CUTOFF, 180.0)  
-        glLightf(lid, GL_SPOT_EXPONENT, 5.0)
-
-        glLightfv(lid, GL_AMBIENT, (0.2, 0.2, 0.2, 1.0))
-        glLightfv(lid, GL_DIFFUSE, (lamp_color[0] * 2.0, lamp_color[1] * 2.0, lamp_color[2] * 2.0, 1.0))  
-        glLightfv(lid, GL_SPECULAR, (lamp_color[0] * 1.5, lamp_color[1] * 1.5, lamp_color[2] * 1.5, 1.0)) 
-
-        glLightf(lid, GL_CONSTANT_ATTENUATION, 0.5)
-        glLightf(lid, GL_LINEAR_ATTENUATION, 0.02)
-        glLightf(lid, GL_QUADRATIC_ATTENUATION, 0.005)
+        glLightf(lid, GL_SPOT_EXPONENT, LIGHT_EXPONENT)
+        glLightf(lid, GL_SPOT_CUTOFF,   LIGHT_CUTOFF)
+        glPopMatrix()
     else:
         glDisable(lid)
     
@@ -230,28 +241,50 @@ def update_sun():
     glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 2.0) 
 
 def draw_floor():
-    S = 100.0
-    T = 10.0
+    S = 100.0     # Tamanho total (raio)
+    T = 10.0      # Repetição da textura
+    step = 10.0    # Tamanho de cada "azulejo" da malha geométrica
+                  # Quanto menor, melhor a iluminação, mas mais pesado.
 
-    glPushAttrib(GL_ALL_ATTRIB_BITS)
+    glDisable(GL_COLOR_MATERIAL)
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.2*0.2]*3 + [1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.2]*3 + [1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.1,0.1,0.1,1.0])
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 10.0)
 
     glEnable(GL_TEXTURE_2D)
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
 
-    # ATIVAR color material APENAS PARA O CHÃO
-    glEnable(GL_COLOR_MATERIAL)
-    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
-    glColor3f(1.0, 1.0, 1.0)
+    glNormal3f(0.0, 1.0, 0.0) # Normal é constante para o chão plano
 
+    # Vamos desenhar uma grelha em vez de um quad gigante
+    # Usamos range int e convertemos para float para evitar erros de float
+    start_i = int(-S)
+    end_i = int(S)
+    step_i = int(step)
+    
     glBegin(GL_QUADS)
-    glNormal3f(0, 1, 0)
-    glTexCoord2f(0, 0); glVertex3f(-S, 0,  S)
-    glTexCoord2f(T, 0); glVertex3f( S, 0,  S)
-    glTexCoord2f(T, T); glVertex3f( S, 0, -S)
-    glTexCoord2f(0, T); glVertex3f(-S, 0, -S)
-    glEnd()
+    for x in range(start_i, end_i, step_i):
+        for z in range(start_i, end_i, step_i):
+            # Coordenadas geométricas dos 4 cantos do "quadradinho" atual
+            x0 = float(x)
+            z0 = float(z)
+            x1 = float(x + step_i)
+            z1 = float(z + step_i)
 
-    glPopAttrib()   # <- VOLTA TUDO AO NORMAL (materiais incluídos!)
+            # Cálculo das Coordenadas de Textura (mapeando posição -> textura)
+            # Fórmula: (posição + offset) / largura_total * repetições
+            s0 = (x0 + S) / (2 * S) * T
+            t0 = (z0 + S) / (2 * S) * T
+            s1 = (x1 + S) / (2 * S) * T
+            t1 = (z1 + S) / (2 * S) * T
+
+            # Desenhar o quadrado pequeno
+            glTexCoord2f(s0, t0); glVertex3f(x0, 0, z1) # Canto inferior esquerdo
+            glTexCoord2f(s1, t0); glVertex3f(x1, 0, z1) # Canto inferior direito
+            glTexCoord2f(s1, t1); glVertex3f(x1, 0, z0) # Canto superior direito
+            glTexCoord2f(s0, t1); glVertex3f(x0, 0, z0) # Canto superior esquerdo
+    glEnd()
 
 
 def rotate_camera(angle):

@@ -38,49 +38,9 @@ class Garage:
         glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.6,0.6,0.6,1.0])
         glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 60.0)
 
-    def draw_porta_garagem(self,x,y,z,comprimento = 7.5, altura = 5,faixas = 10):
-        glPushMatrix()
-        glNormal3f(0.0, 1.0, 0.0) 
-        glTranslatef(x,y,z) #posição dada
-        #glTranslatef(0.0, altura/2, 0.0)  # posiciona acima do chão
-
-        #começa self.Abrir e fechar
-        #--------------------------------------//------------------------------------------
-        #mecanismo de self.Abrir e fechar a porta
-        if self.Abrir and self.ANGLE_GARAGE <90:
-            # gira em torno do eixo superior
-            t = glfw.get_time()
-            self.ANGLE_GARAGE += 30.0 * max(0.0, t - self.last_time_garage)
-            self.last_time_garage = t
-        elif not self.Abrir and self.ANGLE_GARAGE > 0:
-            t = glfw.get_time()
-            self.ANGLE_GARAGE -= 30.0 * max(0.0, t - self.last_time_garage)
-            self.last_time_garage = t 
-        if self.ANGLE_GARAGE > 90: #teste de erros caso a garagem vá muito para cima ou para baixo
-            self.ANGLE_GARAGE = 90
-        elif self.ANGLE_GARAGE < 0:
-            self.ANGLE_GARAGE = 0
-        glTranslatef(0.0, altura, 0.0) # faz com que as tranformações ocorram no eixo superior
-        glRotatef(self.ANGLE_GARAGE, 1, 0, 0)  
-        glTranslatef(0.0, -altura, 0.0)
-        altura_per_faixa = altura / faixas
-        y_atual = 0
-        for i in range(faixas):
-            tom = 0.4 + 0.05 * (i % 2)
-            self.set_material_porta_garagem(tom)
-            glBegin(GL_QUADS)
-            glVertex2f(-comprimento/2,y_atual)
-            glVertex2f(comprimento/2,y_atual)
-            glVertex2f(comprimento/2,y_atual + altura_per_faixa)
-            glVertex2f(-comprimento/2,y_atual + altura_per_faixa)
-            glEnd()
-            y_atual += altura_per_faixa
-
-        self.set_material_base_porta_garagem() # usa uma cor escura para para o portão
-        glPopMatrix()
     
 
-    def draw_wall_garagem(self,x,y,z,angle_rotation = 0, qntVigas=10,comprimento=10,altura=7, largura =0.2, comprimento_viga = 0.1, cor_viga =(0.7,0.7,0.7)):
+    def draw_wall_garagem(self,x,y,z,angle_rotation = 0, qntVigas=15,comprimento=10,altura=7, largura =0.2, comprimento_viga = 0.1, cor_viga =(0.7,0.7,0.7)):
         glPushMatrix()
         glNormal3f(0.0, 1.0, 0.0) 
         glTranslatef(x,y,z) 
