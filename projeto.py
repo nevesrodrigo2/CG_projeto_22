@@ -37,7 +37,7 @@ my_car = Car()
 
 # -------------------------------------------------------------------------------------------------------------------------- #
 # Sol
-sun_angle = 170.0     
+sun_angle = 90.0     
 sun_distance = 100.0   
 sun_color = (1.0, 0.95, 0.8, 1.0)
 
@@ -232,13 +232,13 @@ def update_sun():
     glLightfv(GL_LIGHT0, GL_DIFFUSE, sun_diffuse)
     glLightfv(GL_LIGHT0, GL_SPECULAR, sun_specular)
 
-   
+    # ajustar de acordo com a altura Y do sol
     if sun_y > 0:
         glEnable(GL_LIGHT0)
         glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 180.0)
     else:
         glDisable(GL_LIGHT0)
-    glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 2.0) 
+    glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 1.0) 
 
 def draw_floor():
     """
