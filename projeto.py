@@ -345,9 +345,8 @@ def display():
 
     # sol
     draw_sun(sun_angle, distance=sun_distance, radius=3.0, color=sun_color)
-    sun_angle += 0.01
-    if sun_angle >= 360.0:
-        sun_angle -= 360.0
+    sun_angle += 0.10
+    sun_angle = sun_angle % 360.0
     
     # postes de luz
     draw_post(x=15, z=15, height=post_height, lid=GL_LIGHT1)
