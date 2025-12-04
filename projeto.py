@@ -176,7 +176,7 @@ def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1
         glPushMatrix()
         glEnable(lid) # ativo as luzes
         #defino elas
-        LIGHT_CUTOFF   =  85.0     # meio larguinho
+        LIGHT_CUTOFF   =  85.0
         LIGHT_EXPONENT = 0.0
         glLightfv(lid, GL_AMBIENT,  (0.08, 0.08, 0.09, 1.0))
         glLightfv(lid, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0)) # alterado apra cor difuisa 100% vermelha
@@ -224,7 +224,7 @@ def update_sun():
     sun_z = 0.0
     
     intensity = 2
-    sun_position = [sun_x, sun_y, sun_z, 0]  # posicao da luz
+    sun_position = [sun_x, sun_y, sun_z, 0]
     sun_diffuse = [sun_color[0] * intensity, sun_color[1] * intensity, sun_color[2] * intensity , 1.0]
     sun_specular = [sun_color[0] * intensity, sun_color[1] * intensity, sun_color[2] * intensity, 1.0]
 
@@ -232,7 +232,7 @@ def update_sun():
     glLightfv(GL_LIGHT0, GL_DIFFUSE, sun_diffuse)
     glLightfv(GL_LIGHT0, GL_SPECULAR, sun_specular)
 
-    # ajustar de acordo com a altura Y do sol
+   
     if sun_y > 0:
         glEnable(GL_LIGHT0)
         glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 180.0)
@@ -241,10 +241,16 @@ def update_sun():
     glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 2.0) 
 
 def draw_floor():
-    S = 100.0     # Tamanho total (raio)
-    T = 10.0      # Repetição da textura
-    step = 10.0    # Tamanho de cada "azulejo" da malha geométrica
-                  # Quanto menor, melhor a iluminação, mas mais pesado.
+    """
+    Desenha o chão texturizado.
+    """
+
+    # distância
+    S = 100.0
+    # tamanho dos tiles
+    T = 10.0
+
+    step = 10.0
 
     glDisable(GL_COLOR_MATERIAL)
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.2*0.2]*3 + [1.0])
@@ -255,35 +261,31 @@ def draw_floor():
     glEnable(GL_TEXTURE_2D)
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
 
-    glNormal3f(0.0, 1.0, 0.0) # Normal é constante para o chão plano
+    glNormal3f(0.0, 1.0, 0.0)
 
-    # Vamos desenhar uma grelha em vez de um quad gigante
-    # Usamos range int e convertemos para float para evitar erros de float
-    start_i = int(-S)
-    end_i = int(S)
-    step_i = int(step)
+    # transfomar em int para o range
+    start_int = int(-S)
+    end_int = int(S)
+    step_int = int(step)
     
     glBegin(GL_QUADS)
-    for x in range(start_i, end_i, step_i):
-        for z in range(start_i, end_i, step_i):
-            # Coordenadas geométricas dos 4 cantos do "quadradinho" atual
+    for x in range(start_int, end_int, step_int):
+        for z in range(start_int, end_int, step_int):
+            # vértices do quad
             x0 = float(x)
             z0 = float(z)
-            x1 = float(x + step_i)
-            z1 = float(z + step_i)
-
-            # Cálculo das Coordenadas de Textura (mapeando posição -> textura)
-            # Fórmula: (posição + offset) / largura_total * repetições
+            x1 = float(x + step_int)
+            z1 = float(z + step_int)
+           # coordenadas de textura
             s0 = (x0 + S) / (2 * S) * T
             t0 = (z0 + S) / (2 * S) * T
             s1 = (x1 + S) / (2 * S) * T
             t1 = (z1 + S) / (2 * S) * T
 
-            # Desenhar o quadrado pequeno
-            glTexCoord2f(s0, t0); glVertex3f(x0, 0, z1) # Canto inferior esquerdo
-            glTexCoord2f(s1, t0); glVertex3f(x1, 0, z1) # Canto inferior direito
-            glTexCoord2f(s1, t1); glVertex3f(x1, 0, z0) # Canto superior direito
-            glTexCoord2f(s0, t1); glVertex3f(x0, 0, z0) # Canto superior esquerdo
+            glTexCoord2f(s0, t0); glVertex3f(x0, 0, z1) 
+            glTexCoord2f(s1, t0); glVertex3f(x1, 0, z1) 
+            glTexCoord2f(s1, t1); glVertex3f(x1, 0, z0) 
+            glTexCoord2f(s0, t1); glVertex3f(x0, 0, z0) 
     glEnd()
 
 
