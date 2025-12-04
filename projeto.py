@@ -179,7 +179,7 @@ def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1
         LIGHT_CUTOFF   =  85.0
         LIGHT_EXPONENT = 0.0
         glLightfv(lid, GL_AMBIENT,  (0.08, 0.08, 0.09, 1.0))
-        glLightfv(lid, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0)) # alterado apra cor difuisa 100% vermelha
+        glLightfv(lid, GL_DIFFUSE, (1.0, 1.0, 1.0, 1.0)) 
         glLightfv(lid, GL_SPECULAR, (1.00, 1.00, 1.00, 1.0))
         glLightfv(lid, GL_POSITION, (x - 0.3, height, z, 1.0))
         glLightfv(lid, GL_SPOT_DIRECTION, (0.0, -1.0, 0.0))
@@ -209,6 +209,7 @@ def draw_sun(angle_deg, distance=100.0, radius=3.0, color=(1.0,0.95,0.8,1.0)):
     gluSphere(quadric, radius, 32, 32)
     gluDeleteQuadric(quadric)
     
+    # fazer reset à emissão
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, [0.0,0.0,0.0,1.0])
     glPopMatrix()
 
@@ -253,9 +254,9 @@ def draw_floor():
     step = 10.0
 
     glDisable(GL_COLOR_MATERIAL)
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.2*0.2]*3 + [1.0])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.2]*3 + [1.0])
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.1,0.1,0.1,1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT,  [0.04, 0.04, 0.04, 1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,  [0.2, 0.2, 0.2, 1.0])
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 10.0)
 
     glEnable(GL_TEXTURE_2D)
