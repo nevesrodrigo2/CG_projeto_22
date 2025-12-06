@@ -158,17 +158,6 @@ def draw_post(x=0.0, z=0.0, height=12.0, radius=.2, lamp_color=(1.0, 1.0, 0.8, 1
     gluSphere(quadric, 0.6, 16, 16)
     gluDeleteQuadric(quadric)
     glPopMatrix()
-    
-    # cilindro do poste
-    glPushMatrix()
-    set_material_light_post()
-    glTranslatef(x, 0.0, z)
-    glRotatef(-90, 1, 0, 0)
-    quadric = gluNewQuadric()
-    gluQuadricNormals(quadric, GLU_SMOOTH)
-    gluCylinder(quadric, radius, radius, height, 16, 16)
-    gluDeleteQuadric(quadric)
-    glPopMatrix()
 
     #fazer as luzes
     global posts_on
@@ -247,7 +236,7 @@ def draw_floor():
     """
 
     # distância
-    S = 100.0
+    S = 50.0
     # tamanho dos tiles
     T = 10.0
 
